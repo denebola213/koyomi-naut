@@ -60,6 +60,22 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .dms dt { width: 3.5em; color: var(--dim); }
 .dms dd { margin: 0; font-size: 17px; font-variant-numeric: tabular-nums; }
 .dim { color: var(--dim); font-size: 13px; }
+.help-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; margin-left: 4px; padding: 0;
+  border-radius: 50%; border: 1px solid var(--dim);
+  color: var(--dim); font-size: 13px; line-height: 1; vertical-align: baseline;
+  background: var(--paper);
+}
+.help-dialog {
+  max-width: 420px; width: calc(100% - 32px);
+  padding: 20px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--paper); color: var(--ink);
+}
+.help-dialog::backdrop { background: rgb(0 0 0 / 0.4); }
+.help-dialog h2 { font-size: 16px; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.help-dialog p { margin: 8px 0; }
+.help-close { margin-top: 12px; }
 
 /* ---------- 出没・薄明 縦タイムライン ---------- */
 .timeline { margin: 8px 0 16px; padding-left: 4px; }

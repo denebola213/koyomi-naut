@@ -86,7 +86,7 @@
       <canvas id="moonCanvas" width="120" height="120" aria-label="月相イメージ図"></canvas>
       <div>
         <p class="moon-age">月齢 <strong id="moonAge">—</strong> 日 <span class="dim" id="moonQuarter"></span></p>
-        <p class="note"><span id="moonInfo">—</span></p>
+        <p class="note"><span id="moonInfo">—</span> <button type="button" class="help-btn" id="moonHelpBtn" aria-haspopup="dialog" aria-label="遠近の説明">?</button></p>
       </div>
     </div>
   </section>
@@ -100,6 +100,12 @@
     <p class="note">低精度計算（太陽・月とも誤差 ~0.3° 程度）。精密な観測計画には国立天文台等の値を確認してください。市町村データ: code4fukui/localgovjp（CC BY）。</p>
   </footer>
 </main>
+
+<dialog id="moonHelpDialog" class="help-dialog" aria-labelledby="moonHelpTitle">
+  <h2 id="moonHelpTitle">遠近について</h2>
+  <p>遠近は、近点（平均 363,300 km）を 0%、遠点（平均 405,500 km）を 100% として、その間を 0〜100% で表したものです。近点に近い月は大きく、遠点に近い月は小さく見えます。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
 
 <script src="municipalities.js"></script>
 <script src="astro.js"></script>

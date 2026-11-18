@@ -168,6 +168,13 @@ function moonAge(date) {
   return ((jd - NEW_MOON_JD) % SYNODIC + SYNODIC) % SYNODIC;
 }
 
+/* ---------- 地球-月距離の遠近（近点 0% 〜 遠点 100%） ---------- */
+/* 観測値の代表値（月による平均的な近点・遠点） */
+const PERIGEE_KM = 363300, APOGEE_KM = 405500;
+function distanceRatioPct(dist) {
+  return Math.round((dist - PERIGEE_KM) / (APOGEE_KM - PERIGEE_KM) * 100);
+}
+
 /* ---------- 表示用 ---------- */
 function toDMS(value, posLabel, negLabel) {
   const hemi = value >= 0 ? posLabel : negLabel;
@@ -186,12 +193,23 @@ function fmtTime(date) {
   const next = date.getDate() !== new Date().getDate() && date.getHours() < 12 ? '' : '';
   return `${p2(date.getHours())}:${p2(date.getMinutes())}`;
 }
-/* 四大相（新月・上弦・満月・下弦）のときだけ名前を返す。その他は '' */
-function moonPhaseName(illum, waxing) {
-  if (illum < 0.02) return '新月';
-  if (illum > 0.98) return '満月';
-  if (illum >= 0.47 && illum <= 0.53) return waxing ? '上弦' : '下弦';
-  return '';
+/* 四大相（新月・上弦・満月・下弦）判定: 月齢での四大相位置と名前 */
+const QUARTERS = [
+  { age: 0, name: '新月' },
+  { age: SYNODIC / 4, name: '上弦' },
+  { age: SYNODIC / 2, name: '満月' },
+  { age: 3 * SYNODIC / 4, name: '下弦' },
+];
+/* date 正午時点の月齢の四大相ラベル。四大相時刻から ±0.5 日の範囲内のみ返す */
+function moonPhaseName(date) {
+  const age = moonAge(date);
+  let best = null, bestDist = 1e9;
+  for (const q of QUARTERS) {
+    let d = Math.abs(age - q.age);
+    d = Math.min(d, SYNODIC - d); // 周期境界 (新月は 29.53 と 0 の両側)
+    if (d < bestDist) { bestDist = d; best = q.name; }
+  }
+  return bestDist > 0.5 ? '' : best;
 }
 
-if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName };
+if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName, distanceRatioPct, PERIGEE_KM, APOGEE_KM };

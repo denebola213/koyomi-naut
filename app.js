@@ -69,11 +69,11 @@ function render() {
   if (typeof moonAge === 'function') {
     const age = moonAge(now);
     setText('moonAge', age.toFixed(1));
-    const quarter = moonPhaseName(m.illum, age < SYNODIC / 2);
+    const quarter = moonPhaseName(now);
     setText('moonQuarter', quarter ? `（${quarter}）` : '');
     drawMoonPhase(age);
   }
-  setText('moonInfo', `照度 ${(m.illum * 100).toFixed(0)}%・距離 ${Math.round(m.dist)} km`);
+  setText('moonInfo', `照度 ${(m.illum * 100).toFixed(0)}%・距離 ${Math.round(m.dist)} km・遠近 ${distanceRatioPct(m.dist)}%`);
 
   drawTrajectory(lat, lon, date);
 }
@@ -243,6 +243,21 @@ function init() {
   });
   $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); save(); render(); });
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
+
+  /* 「遠近」説明ポップアップ */
+  const moonHelpBtn = $('moonHelpBtn');
+  const moonHelpDialog = $('moonHelpDialog');
+  if (moonHelpBtn && moonHelpDialog) {
+    moonHelpBtn.addEventListener('click', () => {
+      if (typeof moonHelpDialog.showModal === 'function') moonHelpDialog.showModal();
+      else moonHelpDialog.setAttribute('open', '');
+    });
+    moonHelpDialog.addEventListener('click', e => {
+      const r = moonHelpDialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) moonHelpDialog.close();
+    });
+  }
+
   window.addEventListener('resize', () => drawTrajectory(state.lat, state.lon, state.date));
   render();
 }
