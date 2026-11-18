@@ -2,6 +2,7 @@
 /* Sky PWA step1: 場所・日付 → 緯度経度(DMS) / 出没・薄明 / 太陽・月軌道図 */
 
 const $ = id => document.getElementById(id);
+const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '' };
 
 function todayStr() {
@@ -58,26 +59,28 @@ function render() {
     const suffix = t.getDate() !== Number(date.split('-')[2]) ? ' 翌' : '';
     return fmtTime(t) + suffix;
   };
-  $('evSunrise').textContent = fmtTime(ev.sunrise);
-  $('evSunset').textContent = fmtTime(ev.sunset);
-  $('evDayLength').textContent = fmtDur(ev.dayLengthMin);
-  $('evSunMax').textContent = ev.sunMaxAlt.toFixed(1) + '°';
-  $('evMoonrise').textContent = fmtAstro(ev.moonrise);
-  $('evMoonset').textContent = fmtAstro(ev.moonset);
-  $('evAstroStart').textContent = fmtAstro(ev.astroStart);
-  $('evAstroEnd').textContent = fmtAstro(ev.astroEnd);
-  $('evNightStart').textContent = fmtAstro(ev.astroStart);
-  $('evNightEnd').textContent = fmtAstro(ev.astroEnd);
-  $('evNightLength').textContent = (ev.astroStart && ev.astroEnd)
-    ? fmtDur((ev.astroEnd - ev.astroStart) / 60000) : '—';
+  setText('evSunrise', fmtTime(ev.sunrise));
+  setText('evSunset', fmtTime(ev.sunset));
+  setText('evDayLength', fmtDur(ev.dayLengthMin));
+  setText('evSunMax', ev.sunMaxAlt.toFixed(1) + '°');
+  setText('evMoonrise', fmtAstro(ev.moonrise));
+  setText('evMoonset', fmtAstro(ev.moonset));
+  setText('evAstroStart', fmtAstro(ev.astroStart));
+  setText('evAstroEnd', fmtAstro(ev.astroEnd));
+  setText('evNightStart', fmtAstro(ev.astroStart));
+  setText('evNightEnd', fmtAstro(ev.astroEnd));
+  setText('evNightLength', (ev.astroStart && ev.astroEnd)
+    ? fmtDur((ev.astroEnd - ev.astroStart) / 60000) : '—');
 
   const now = new Date(date + 'T12:00:00');
   const m = moonEcliptic(now);
-  const age = moonAge(now);
-  $('moonAge').textContent = age.toFixed(1);
-  $('moonWax').textContent = age < SYNODIC / 2 ? '（満ちる）' : '（欠ける）';
-  $('moonInfo').textContent = `${moonPhaseName(m.illum)}・照度 ${(m.illum * 100).toFixed(0)}%・距離 ${(m.dist / 1000).toFixed(0)}千km`;
-  drawMoonPhase(age);
+  if (typeof moonAge === 'function') {
+    const age = moonAge(now);
+    setText('moonAge', age.toFixed(1));
+    setText('moonWax', age < SYNODIC / 2 ? '（満ちる）' : '（欠ける）');
+    drawMoonPhase(age);
+  }
+  setText('moonInfo', `${moonPhaseName(m.illum)}・照度 ${(m.illum * 100).toFixed(0)}%・距離 ${(m.dist / 1000).toFixed(0)}千km`);
 
   drawTrajectory(lat, lon, date);
 }
