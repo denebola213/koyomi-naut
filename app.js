@@ -66,6 +66,8 @@ function render() {
   $('evMoonset').textContent = fmtAstro(ev.moonset);
   $('evAstroStart').textContent = fmtAstro(ev.astroStart);
   $('evAstroEnd').textContent = fmtAstro(ev.astroEnd);
+  $('evNightLength').textContent = (ev.astroStart && ev.astroEnd)
+    ? fmtDur((ev.astroEnd - ev.astroStart) / 60000) : '—';
 
   const now = new Date(date + 'T12:00:00');
   const m = moonEcliptic(now);

@@ -1,6 +1,6 @@
 {
-  "name": "空の記録 — 日の出・月・軌道",
-  "short_name": "空の記録",
+  "name": "koyomi-naut",
+  "short_name": "koyomi-naut",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",
