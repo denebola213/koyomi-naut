@@ -46,4 +46,8 @@ table.events caption { text-align: left; color: var(--dim); font-size: 13px; pad
 table.events th, table.events td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
 table.events th { font-weight: 500; color: var(--dim); width: 22%; }
 canvas#traj { width: 100%; height: 360px; border: 1px solid var(--line); display: block; }
+.moon-phase { display: flex; gap: 16px; align-items: center; margin-top: 16px; border: 1px solid var(--line); padding: 12px; }
+.moon-phase canvas { width: 120px; height: 120px; flex: 0 0 auto; }
+.moon-age { font-size: 20px; margin: 0 0 6px; font-variant-numeric: tabular-nums; }
+.moon-phase p { margin: 4px 0; }
 footer { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 12px; }

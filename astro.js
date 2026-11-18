@@ -149,6 +149,14 @@ function trajectory(lat, lon, dateStr) {
   return { sun, moon };
 }
 
+/* ---------- 月齢 ---------- */
+const SYNODIC = 29.530588853;
+const NEW_MOON_JD = 2451550.1; // 2000-01-06 18:14 UTC の新月（基準）
+function moonAge(date) {
+  const jd = julianDay(date);
+  return ((jd - NEW_MOON_JD) % SYNODIC + SYNODIC) % SYNODIC;
+}
+
 /* ---------- 表示用 ---------- */
 function toDMS(value, posLabel, negLabel) {
   const hemi = value >= 0 ? posLabel : negLabel;
@@ -175,4 +183,4 @@ function moonPhaseName(illum) {
   return '半月〜満月';
 }
 
-if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, toDMS, fmtTime, moonPhaseName };
+if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName };

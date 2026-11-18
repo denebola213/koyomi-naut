@@ -66,14 +66,46 @@ function render() {
   $('evMoonset').textContent = fmtAstro(ev.moonset);
   $('evAstroStart').textContent = fmtAstro(ev.astroStart);
   $('evAstroEnd').textContent = fmtAstro(ev.astroEnd);
+  $('evNightStart').textContent = fmtAstro(ev.astroStart);
+  $('evNightEnd').textContent = fmtAstro(ev.astroEnd);
   $('evNightLength').textContent = (ev.astroStart && ev.astroEnd)
     ? fmtDur((ev.astroEnd - ev.astroStart) / 60000) : '—';
 
   const now = new Date(date + 'T12:00:00');
   const m = moonEcliptic(now);
+  const age = moonAge(now);
+  $('moonAge').textContent = age.toFixed(1);
+  $('moonWax').textContent = age < SYNODIC / 2 ? '（満ちる）' : '（欠ける）';
   $('moonInfo').textContent = `${moonPhaseName(m.illum)}・照度 ${(m.illum * 100).toFixed(0)}%・距離 ${(m.dist / 1000).toFixed(0)}千km`;
+  drawMoonPhase(age);
 
   drawTrajectory(lat, lon, date);
+}
+
+/* 月相イメージ図（北半球: 満ちる=右側が照る） */
+function drawMoonPhase(age) {
+  const cv = $('moonCanvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const S = 120, cx = S / 2, cy = S / 2, r = 52;
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  ctx.clearRect(0, 0, S, S);
+  // 暗部
+  ctx.fillStyle = dark ? '#3a3f4a' : '#c9ccd4';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+  // 照部: 行ごとに終端楕円の内側を塗る
+  const k = Math.cos(2 * Math.PI * age / SYNODIC);
+  const waxing = age < SYNODIC / 2;
+  ctx.fillStyle = dark ? '#f2ead0' : '#e8d98a';
+  for (let y = -r; y <= r; y++) {
+    const hw = Math.sqrt(Math.max(0, r * r - y * y));
+    let x0, x1;
+    if (waxing) { x0 = cx + k * hw; x1 = cx + hw; }
+    else { x0 = cx - hw; x1 = cx - k * hw; }
+    if (x1 > x0) ctx.fillRect(x0, cy + y, x1 - x0, 1);
+  }
+  ctx.strokeStyle = dark ? '#8a8f9a' : '#9a9da6';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 }
 
 /* 軌道図: 横=方位(北0→東→南→西→北), 縦=高度(-20〜90) */
