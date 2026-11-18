@@ -1,7 +1,10 @@
-# 空の記録 (Sky PWA)
+# koyomi-naut
 
 GPS または市町村・座標入力から、日の出・日の入り、月の出・月の入り、天文薄明・天文暗夜、
 太陽と月の軌道を表示する、オフライン対応の静的 PWA。
+
+- 本番: https://koyomi-naut.pages.dev
+- リポジトリ: https://github.com/denebola213/koyomi-naut
 
 ## Step 1（実装済み）
 
@@ -25,11 +28,12 @@ GPS または市町村・座標入力から、日の出・日の入り、月の�
 
 ビルド不要の静的サイト。リポジトリ直下をそのまま配信する。
 
-### Cloudflare Pages
+### Cloudflare Pages（Terraform 管理）
 
-- Framework preset: **None**
-- Build command: （空）
-- Output directory: `/` （＝リポジトリ直下）
+- Pages プロジェクト: `koyomi-naut`
+- Production branch: `main`（`main` への push で自動デプロイ）
+- Build command: `exit 0`（ビルドなし）/ Build output directory: `/`（リポジトリ直下）
+- 定義: [`terraform/pages.tf`](terraform/pages.tf) / 手順: [`DEPLOY.md`](DEPLOY.md)
 
 `_headers` で Service Worker の `Cache-Control: no-cache` 等を設定済み。
 
