@@ -120,6 +120,29 @@ function dayEvents(lat, lon, dateStr) {
   push(sHits, '日の出', '日の入り', 'sun');
   push(astroHits, '天文薄明終了', '天文薄明開始', 'astro');
   push(moonHits, '月の出', '月の入り', 'moon');
+  // 南中: 窓内の高度の極大値 (出没と同窓, 10分走査→三分割法で精密化)
+  const transitAltAt = (body, ms) =>
+    (body === 'sun' ? sunAltAz(new Date(ms), lat, lon) : moonAltAz(new Date(ms), lat, lon)).alt;
+  const findTransits = body => {
+    const out = [], start = dayStart.getTime(), end = windowEnd.getTime(), step = 10 * 60000;
+    let prev = null, prevPrev = null; // {t, a}
+    for (let t = start; t <= end; t += step) {
+      const cur = { t, a: transitAltAt(body, t) };
+      if (prev && prevPrev && prev.a >= prevPrev.a && prev.a > cur.a) {
+        // prev が極大点: 三分割法で精密化
+        let lo = prev.t - step, hi = cur.t;
+        for (let i = 0; i < 40; i++) {
+          const m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+          if (transitAltAt(body, m1) < transitAltAt(body, m2)) lo = m1; else hi = m2;
+        }
+        out.push(new Date((lo + hi) / 2));
+      }
+      prevPrev = prev; prev = cur;
+    }
+    return out;
+  };
+  for (const t of findTransits('sun')) windowEvents.push({ time: t, label: '太陽の南中', cls: 'sun' });
+  for (const t of findTransits('moon')) windowEvents.push({ time: t, label: '月の南中', cls: 'moon' });
   windowEvents.sort((a, b) => a.time - b.time);
 
   const rise = sHits.find(h => h.rising && h.time < nextDayStart) || null;
