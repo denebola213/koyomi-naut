@@ -67,10 +67,6 @@ function render() {
   setText('evMoonset', fmtAstro(ev.moonset));
   setText('evAstroStart', fmtAstro(ev.astroStart));
   setText('evAstroEnd', fmtAstro(ev.astroEnd));
-  setText('evNightStart', fmtAstro(ev.astroStart) === '—' ? '—' : '＝薄明開始');
-  setText('evNightEnd', fmtAstro(ev.astroEnd) === '—' ? '—' : '＝薄明終了');
-  setText('evNightLength', (ev.astroStart && ev.astroEnd)
-    ? fmtDur((ev.astroEnd - ev.astroStart) / 60000) : '—');
 
   const now = new Date(date + 'T12:00:00');
   const m = moonEcliptic(now);
