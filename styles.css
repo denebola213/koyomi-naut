@@ -36,7 +36,8 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .place-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-top: 8px; }
 .place-tabs [role="tab"] {
   border: 1px solid var(--line); border-bottom: 0; border-radius: 4px 4px 0 0;
-  padding: 8px 14px; background: var(--result-bg); color: var(--dim);
+  padding: 6px 12px; background: var(--result-bg); color: var(--dim);
+  font-size: 13px; white-space: nowrap;
 }
 .place-tabs [role="tab"] + [role="tab"] { border-left: 0; }
 .place-tabs [role="tab"][aria-selected="true"] {
