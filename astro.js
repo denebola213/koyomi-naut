@@ -186,12 +186,12 @@ function fmtTime(date) {
   const next = date.getDate() !== new Date().getDate() && date.getHours() < 12 ? '' : '';
   return `${p2(date.getHours())}:${p2(date.getMinutes())}`;
 }
-function moonPhaseName(illum) {
-  if (illum < 0.03) return '新月';
-  if (illum > 0.97) return '満月';
-  if (illum < 0.47) return '三日月〜半月';
-  if (illum < 0.53) return '半月';
-  return '半月〜満月';
+/* 四大相（新月・上弦・満月・下弦）のときだけ名前を返す。その他は '' */
+function moonPhaseName(illum, waxing) {
+  if (illum < 0.02) return '新月';
+  if (illum > 0.98) return '満月';
+  if (illum >= 0.47 && illum <= 0.53) return waxing ? '上弦' : '下弦';
+  return '';
 }
 
 if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName };

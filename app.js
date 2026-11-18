@@ -69,10 +69,11 @@ function render() {
   if (typeof moonAge === 'function') {
     const age = moonAge(now);
     setText('moonAge', age.toFixed(1));
-    setText('moonWax', age < SYNODIC / 2 ? '（満ちる）' : '（欠ける）');
+    const quarter = moonPhaseName(m.illum, age < SYNODIC / 2);
+    setText('moonQuarter', quarter ? `（${quarter}）` : '');
     drawMoonPhase(age);
   }
-  setText('moonInfo', `${moonPhaseName(m.illum)}・照度 ${(m.illum * 100).toFixed(0)}%・距離 ${(m.dist / 1000).toFixed(0)}千km`);
+  setText('moonInfo', `照度 ${(m.illum * 100).toFixed(0)}%・距離 ${Math.round(m.dist)} km`);
 
   drawTrajectory(lat, lon, date);
 }
