@@ -1,0 +1,75 @@
+# koyomi-naut AGENT.md
+
+オフライン対応 PWA（日の出・日の入り・月の出・月の入り・天文薄明・南中・太陽と月の軌道）。
+計算は端末内で完結し、**第三者への通信・データ送信はしない**。静的サイトでビルドなし。
+
+## 構成
+
+| ファイル | 役割 |
+|---|---|
+| `index.html` | 画面構造（場所・日付・出没・薄明・軌道） |
+| `app.js` | DOM 描画・イベント・localStorage 保存・GPS 取得 |
+| `astro.js` | 天文計算（Meeus 低精度）・出没・薄明・南中・月齢・四大相・遠近 |
+| `municipalities.js` | 市町村データ（code4fukui/localgovjp, CC BY） |
+| `styles.css` | UI スタイル |
+| `sw.js` | Service Worker（ネットワーク優先・失敗時はキャッシュ） |
+| `manifest.webmanifest` | PWA マニフェスト |
+| `terraform/pages.tf` | Cloudflare Pages プロジェクト定義 |
+
+リポジトリ用ルール・スキルは `.agents/skills/koyomi-naut/`。
+
+## 新しい見せ方を追加する前に
+
+オンライン部分（CDN 通信・API 取得・第三者解析等）の要否は**提案 → ユーザー承認**が前提。
+豊富な表現が必要ならまず方針提案を受け、承認を得てから実装する。
+
+### 通信ポリシー（再徹底）
+
+- アセットは同一オリジンの静的ファイルのみ（相対パス参照）。
+- **外部URLの直読み込み禁止**（フォント・ライブラリ・解析・アフィリエイト等のベンダーCDN禁止）。
+- もし外部データが必要な場合は、**全データを端末内ファイルとして内包**する（CSV/JSON等）。
+- `fetch` / `WebSocket` / `XMLHttpRequest` による**第三者ホストへの通信はしない**。
+- Service Worker の `fetch` は自サイト配下の GET のみ（現状）。第三者URLを対象にしない。
+- GPS（`navigator.geolocation`）の結果は `localStorage` のみ保存し、外部送信しない。
+- `README.md` の「計算は端末内で完結し、第三者への通信・データ送信はありません」を維持。
+
+### 通信の追加が必要な場合は
+
+1. 提案として通信先・取得データ・使用目的を明記
+2. ユーザー承認を受けた上で最小限に実装（同一オリジン優先）
+3. オフラインフォールバック（SWキャッシュ等）を必ず残す
+
+## 実装方針
+
+### 表示・データ
+
+- 月齢は `moonAge()`。月の距離は距離近似式（`moonEcliptic().dist`）で数値表示（`km` のみ）。
+- 四大相（新月・上弦・満月・下弦）ラベルは **黄経差で交差時刻を探索**し（`moonPhaseName(date)`）、
+  正午が交差時刻から ±0.5 日以内なら月齢横に括弧書き。それ以外の日は非表示。
+- 距離の「遠近」は近点 363,300 km=0%・遠点 405,500 km=100% で正規化表示（`distanceRatioPct()`）。
+  「？」ボタンで説明ポップアップ（`<dialog>`）。
+- 時間窓は指定日 00:00 〜 翌日日の出（`dayEvents()` の `windowEvents`）。南中は窓内での極大値探索。
+
+### キャッシュ・デプロイ
+
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v13 現在）。
+- Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
+- デプロイは Cloudflare Pages に `main` push で自動発行（Git 連携）。
+- ローカル確認: `python3 -m http.server 8000`。
+
+### タイムライン追加
+
+- `dayEvents()` の `windowEvents` に `{ time, label, cls }` を追加し、時刻順ソート。
+  既存の `renderTimeline()` が描画。
+- 新時刻（2回あり得る場合は2行表示、例: 月の南中は 24.8h 周期で窓長により 1〜2 回）。
+
+## 検証
+
+- `node --check app.js astro.js`
+- Node での数値テストは `require('./astro.js')`（`module.exports` あり）。
+- ラベル表示（四大相）は月齢±0.5 日ではなく黄経差の交差時刻で判定。
+
+## 参照
+
+- 本番: https://koyomi-naut.pages.dev
+- リポジトリ: https://github.com/denebola213/koyomi-naut（main push で自動デプロイ）
