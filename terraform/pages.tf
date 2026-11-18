@@ -74,5 +74,5 @@ resource "cloudflare_pages_project" "koyomi_naut" {
 }
 
 output "pages_url" {
-  value = "https://${cloudflare_pages_project.koyomi_naut.name}.${cloudflare_pages_project.koyomi_naut.subdomain}.pages.dev"
+  value = "https://${cloudflare_pages_project.koyomi_naut.subdomain}"
 }
