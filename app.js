@@ -67,6 +67,7 @@ function render() {
   setText('evMoonset', fmtAstro(ev.moonset));
   setText('evAstroStart', fmtAstro(ev.astroStart));
   setText('evAstroEnd', fmtAstro(ev.astroEnd));
+  renderTimeline(ev, fmtAstro);
 
   const now = new Date(date + 'T12:00:00');
   const m = moonEcliptic(now);
@@ -79,6 +80,40 @@ function render() {
   setText('moonInfo', `${moonPhaseName(m.illum)}・照度 ${(m.illum * 100).toFixed(0)}%・距離 ${(m.dist / 1000).toFixed(0)}千km`);
 
   drawTrajectory(lat, lon, date);
+}
+
+/* 出没・薄明の縦タイムライン: 当日分を時刻順に並べ、上→下で時間の流れを示す */
+function renderTimeline(ev, fmtAstro) {
+  const el = $('timeline');
+  if (!el) return;
+  const items = [
+    { t: ev.astroStart, label: '天文薄明開始', cls: 'astro', astro: true },
+    { t: ev.sunrise, label: '日の出', cls: 'sun' },
+    { t: ev.moonrise, label: '月の出', cls: 'moon', astro: true },
+    { t: ev.sunset, label: '日の入り', cls: 'sun' },
+    { t: ev.moonset, label: '月の入り', cls: 'moon', astro: true },
+    { t: ev.astroEnd, label: '天文薄明終了', cls: 'astro', astro: true },
+  ].filter(i => i.t).sort((a, b) => a.t - b.t);
+  el.innerHTML = '';
+  if (!items.length) {
+    const p = document.createElement('p');
+    p.className = 'timeline-empty'; p.textContent = 'この日は出没・薄明の時刻がありません。';
+    el.appendChild(p); return;
+  }
+  for (const i of items) {
+    const row = document.createElement('div');
+    row.className = 'timeline-item';
+    const dot = document.createElement('span');
+    dot.className = `timeline-dot ${i.cls}`;
+    const time = document.createElement('span');
+    time.className = 'timeline-time';
+    time.textContent = i.astro ? fmtAstro(i.t) : fmtTime(i.t);
+    const label = document.createElement('span');
+    label.className = 'timeline-label';
+    label.textContent = i.label;
+    row.append(dot, time, label);
+    el.appendChild(row);
+  }
 }
 
 /* 月相イメージ図（北半球: 満ちる=右側が照る） */
@@ -169,6 +204,28 @@ function init() {
   $('latInput').value = state.lat.toFixed(4);
   $('lonInput').value = state.lon.toFixed(4);
   $('placeLabel').textContent = state.place;
+
+  /* 場所タブ切り替え */
+  const tabs = [...document.querySelectorAll('.place-tabs [role="tab"]')];
+  function activateTab(tab, focus) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      $(t.dataset.panel).hidden = !on;
+    }
+    if (focus) tab.focus();
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => activateTab(t, false));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      activateTab(tabs[(i + dir + tabs.length) % tabs.length], true);
+    });
+  });
+  activateTab(tabs[0], false);
 
   const box = $('muniSearch'), list = $('muniResults');
   box.addEventListener('input', () => {
