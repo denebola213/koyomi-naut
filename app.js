@@ -59,14 +59,9 @@ function render() {
     const suffix = t.getDate() !== Number(date.split('-')[2]) ? ' 翌' : '';
     return fmtTime(t) + suffix;
   };
-  setText('evSunrise', fmtTime(ev.sunrise));
-  setText('evSunset', fmtTime(ev.sunset));
   setText('evDayLength', fmtDur(ev.dayLengthMin));
   setText('evSunMax', ev.sunMaxAlt.toFixed(1) + '°');
-  setText('evMoonrise', fmtAstro(ev.moonrise));
-  setText('evMoonset', fmtAstro(ev.moonset));
-  setText('evAstroStart', fmtAstro(ev.astroStart));
-  setText('evAstroEnd', fmtAstro(ev.astroEnd));
+  setText('evNightLength', fmtDur(ev.nightLengthMin));
   renderTimeline(ev, fmtAstro);
 
   const now = new Date(date + 'T12:00:00');
@@ -82,22 +77,15 @@ function render() {
   drawTrajectory(lat, lon, date);
 }
 
-/* 出没・薄明の縦タイムライン: 当日分を時刻順に並べ、上→下で時間の流れを示す */
+/* 指定日 00:00 から翌日日の出までの全イベントを時刻順に並べる縦タイムライン */
 function renderTimeline(ev, fmtAstro) {
   const el = $('timeline');
   if (!el) return;
-  const items = [
-    { t: ev.astroStart, label: '天文薄明開始', cls: 'astro', astro: true },
-    { t: ev.sunrise, label: '日の出', cls: 'sun' },
-    { t: ev.moonrise, label: '月の出', cls: 'moon', astro: true },
-    { t: ev.sunset, label: '日の入り', cls: 'sun' },
-    { t: ev.moonset, label: '月の入り', cls: 'moon', astro: true },
-    { t: ev.astroEnd, label: '天文薄明終了', cls: 'astro', astro: true },
-  ].filter(i => i.t).sort((a, b) => a.t - b.t);
+  const items = (ev.windowEvents || []).slice().sort((a, b) => a.time - b.time);
   el.innerHTML = '';
   if (!items.length) {
     const p = document.createElement('p');
-    p.className = 'timeline-empty'; p.textContent = 'この日は出没・薄明の時刻がありません。';
+    p.className = 'timeline-empty'; p.textContent = 'この範囲に出没・薄明の時刻がありません。';
     el.appendChild(p); return;
   }
   for (const i of items) {
@@ -107,7 +95,7 @@ function renderTimeline(ev, fmtAstro) {
     dot.className = `timeline-dot ${i.cls}`;
     const time = document.createElement('span');
     time.className = 'timeline-time';
-    time.textContent = i.astro ? fmtAstro(i.t) : fmtTime(i.t);
+    time.textContent = fmtAstro(i.time);
     const label = document.createElement('span');
     label.className = 'timeline-label';
     label.textContent = i.label;

@@ -98,41 +98,52 @@ function findCrossings(lat, lon, dayStart, hours, body, threshold) {
   return hits;
 }
 
-/* 指定ローカル日 (dateStr 'YYYY-MM-DD') の各種時刻を返す */
+/* 指定ローカル日 (dateStr 'YYYY-MM-DD') の各種時刻を返す
+ * タイムライン対象: 指定日 00:00 から翌日の日の出まで (windowEvents)
+ * 暗夜の長さ: 指定日夕方の天文薄明開始 → 翌朝の天文薄明終了
+ */
 function dayEvents(lat, lon, dateStr) {
   const [y, mo, d] = dateStr.split('-').map(Number);
   const dayStart = new Date(y, mo - 1, d, 0, 0, 0);
-  // 前日正午から翌日正午まで走査 (日の出=朝、人の出=夕方、暗夜=夜〜翌朝)
-  const scanStart = new Date(y, mo - 1, d - 1, 12, 0, 0);
-  const sHits = findCrossings(lat, lon, new Date(y, mo - 1, d, 0), 24, 'sun', -0.833);
-  const rise = sHits.find(h => h.rising) || null;
-  const set = sHits.find(h => !h.rising) || null;
-  const astro = findCrossings(lat, lon, scanStart, 48, 'sun', -18);
-  const astroStart = astro.find(h => !h.rising && h.time >= dayStart) || null;
-  let astroEnd = null;
-  if (astroStart) astroEnd = astro.find(h => h.rising && h.time > astroStart.time) || null;
-  else astroEnd = astro.find(h => h.rising && h.time >= dayStart && h.time < new Date(y, mo - 1, d + 1, 12)) || null;
-  const moon = findCrossings(lat, lon, new Date(y, mo - 1, d, 0), 24, 'moon', 0.125);
-  const moonrise = moon.find(h => h.rising) || null;
-  let moonset = moon.find(h => !h.rising) || null;
-  if (!moonset) {
-    const extra = findCrossings(lat, lon, new Date(y, mo - 1, d + 1, 0), 12, 'moon', 0.125);
-    moonset = extra.find(h => !h.rising) || null;
-  }
+  const nextDayStart = new Date(y, mo - 1, d + 1, 0, 0, 0);
+  // 48時間走査して窓 (00:00〜翌日日の出) の全交差を集める
+  const sHits = findCrossings(lat, lon, dayStart, 48, 'sun', -0.833);
+  const astroHits = findCrossings(lat, lon, dayStart, 48, 'sun', -18);
+  const moonHits = findCrossings(lat, lon, dayStart, 48, 'moon', 0.125);
+  const nextSunriseHit = sHits.find(h => h.rising && h.time >= nextDayStart) || null;
+  const windowEnd = nextSunriseHit ? nextSunriseHit.time : new Date(dayStart.getTime() + 24 * 3600000);
+  const inWindow = t => t >= dayStart && t <= windowEnd;
+  const windowEvents = [];
+  const push = (hits, risingLabel, settingLabel, cls) => {
+    for (const h of hits) if (inWindow(h.time)) windowEvents.push({ time: h.time, label: h.rising ? risingLabel : settingLabel, cls });
+  };
+  push(sHits, '日の出', '日の入り', 'sun');
+  push(astroHits, '天文薄明終了', '天文薄明開始', 'astro');
+  push(moonHits, '月の出', '月の入り', 'moon');
+  windowEvents.sort((a, b) => a.time - b.time);
 
-  // 昼の長さ・太陽最大高度
-  let maxAlt = -90, noonAlt = null;
+  const rise = sHits.find(h => h.rising && h.time < nextDayStart) || null;
+  const set = sHits.find(h => !h.rising && h.time < nextDayStart) || null;
+  const astroStart = astroHits.find(h => !h.rising && h.time >= dayStart && h.time < nextDayStart) || null;
+  const astroEnd = astroStart ? (astroHits.find(h => h.rising && h.time > astroStart.time) || null) : null;
+  const moonDay = moonHits.filter(h => h.time < nextDayStart);
+  const moonrise = moonDay.find(h => h.rising) || null;
+  const moonset = moonDay.find(h => !h.rising) || moonHits.find(h => !h.rising && h.time >= nextDayStart) || null;
+
+  // 昼の長さ・太陽最大高度・暗夜の長さ
+  let maxAlt = -90;
   for (let m = 0; m <= 24 * 60; m += 10) {
     const t = new Date(dayStart.getTime() + m * 60000);
     const a = sunAltAz(t, lat, lon).alt;
     if (a > maxAlt) maxAlt = a;
   }
-  noonAlt = sunAltAz(new Date(y, mo - 1, d, 12), lat, lon).alt;
   return {
     sunrise: rise ? rise.time : null, sunset: set ? set.time : null,
     astroStart: astroStart ? astroStart.time : null, astroEnd: astroEnd ? astroEnd.time : null,
     moonrise: moonrise ? moonrise.time : null, moonset: moonset ? moonset.time : null,
     sunMaxAlt: maxAlt, dayLengthMin: (rise && set) ? (set.time - rise.time) / 60000 : null,
+    nightLengthMin: (astroStart && astroEnd) ? (astroEnd.time - astroStart.time) / 60000 : null,
+    windowEvents, nextSunrise: nextSunriseHit ? nextSunriseHit.time : null,
   };
 }
 
