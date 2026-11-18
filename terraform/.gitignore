@@ -1,0 +1,6 @@
+# terraform/.gitignore 相当
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+.terraform/
