@@ -193,23 +193,51 @@ function fmtTime(date) {
   const next = date.getDate() !== new Date().getDate() && date.getHours() < 12 ? '' : '';
   return `${p2(date.getHours())}:${p2(date.getMinutes())}`;
 }
-/* 四大相（新月・上弦・満月・下弦）判定: 月齢での四大相位置と名前 */
+/* 四大相（新月・上弦・満月・下弦）判定: 黄経差（月−太陽）での交差時刻 */
 const QUARTERS = [
-  { age: 0, name: '新月' },
-  { age: SYNODIC / 4, name: '上弦' },
-  { age: SYNODIC / 2, name: '満月' },
-  { age: 3 * SYNODIC / 4, name: '下弦' },
+  { target: 0, name: '新月' },
+  { target: 90, name: '上弦' },
+  { target: 180, name: '満月' },
+  { target: 270, name: '下弦' },
 ];
-/* date 正午時点の月齢の四大相ラベル。四大相時刻から ±0.5 日の範囲内のみ返す */
-function moonPhaseName(date) {
-  const age = moonAge(date);
-  let best = null, bestDist = 1e9;
-  for (const q of QUARTERS) {
-    let d = Math.abs(age - q.age);
-    d = Math.min(d, SYNODIC - d); // 周期境界 (新月は 29.53 と 0 の両側)
-    if (d < bestDist) { bestDist = d; best = q.name; }
+const phaseAngle = d => {
+  const m = moonEcliptic(d), s = sunEcliptic(d);
+  return ((m.lon - s.lon) % 360 + 360) % 360;
+};
+/* 基準時刻 center の前後 ±1.5 日で target の前方交差時刻を二分探索する。
+   交差が無い場合は null。交差は出現するかどうかが分からないため、
+   1 時間刻みで位相角を走査し、巻き戻り（target 跨ぎ）を含む区間を探す。 */
+function quarterCrossing(centerMs, target) {
+  const rel = ms => {
+    const d = new Date(ms);
+    const m = moonEcliptic(d), s = sunEcliptic(d);
+    const p = ((m.lon - s.lon) % 360 + 360) % 360;
+    return (p - target + 720) % 360;
+  };
+  let lo = centerMs - 1.5 * 86400000, hi = centerMs + 1.5 * 86400000;
+  // rel は位相角から target を引いたもの（0..360)。位相角が target を跨ぐと
+  // rel は大きい値から小さい値へ巻き戻る。その不連続点を含む区間を二分探索する。
+  let prevR = rel(lo), found = false;
+  for (let t = lo + 3600000; t <= hi; t += 3600000) {
+    const r = rel(t);
+    if (r < prevR - 180) { found = true; lo = t - 3600000; hi = t; break; }
+    prevR = r;
   }
-  return bestDist > 0.5 ? '' : best;
+  if (!found) return null;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2, rm = rel(mid);
+    if (rm >= rel(lo)) lo = mid; else hi = mid;
+  }
+  return new Date((lo + hi) / 2);
+}
+/* date 正午時点の四大相ラベル。実際の交差時刻から ±0.5 日の範囲内のみ返す */
+function moonPhaseName(date) {
+  const noonMs = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12).getTime();
+  for (const q of QUARTERS) {
+    const cross = quarterCrossing(noonMs, q.target);
+    if (cross && Math.abs(cross.getTime() - noonMs) <= 0.5 * 86400000) return q.name;
+  }
+  return '';
 }
 
-if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName, distanceRatioPct, PERIGEE_KM, APOGEE_KM };
+if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName, quarterCrossing, phaseAngle, distanceRatioPct, PERIGEE_KM, APOGEE_KM };
