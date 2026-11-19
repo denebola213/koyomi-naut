@@ -295,7 +295,7 @@ function drawTrajectory(lat, lon, date) {
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
  * 一等星は bright-stars.js（等級1.5以下22星）、黄道は黄道緯度0°の円（ラベルなし）、
- * 天の川は milky-way.js（輪郭線のみ）。 */
+ * 天の川は milky-way.js（外側輪郭で塗る）。 */
 /* 星座名の位置: 結びの点の球面平均（単位ベクトル平均）で中心を求める */
 let _constLabelCache = null;
 function constellationLabelPos(c) {
@@ -312,6 +312,70 @@ function constellationLabelPos(c) {
   v = [ra, dec];
   _constLabelCache.set(c, v);
   return v;
+}
+/* 天の川の帯判定: 外側輪郭2本を銀河座標 (l, b) に変換し、l ごとの南・北境界 b(l) を作る。
+ * 帯は銀河面に沿う帯なので、各 l で b は単調な区間になる（北銀極付近を除く）。 */
+function unitVec(raDeg, decDeg) {
+  const r = raDeg * Math.PI / 180, d = decDeg * Math.PI / 180;
+  return [Math.cos(d) * Math.cos(r), Math.cos(d) * Math.sin(r), Math.sin(d)];
+}
+let _galBasis = null;
+function galBasis() {
+  if (_galBasis) return _galBasis;
+  const zg = unitVec(192.859508, 27.128336); // 北銀極 (J2000)
+  const xg = unitVec(266.405, -29.008);     // 銀河中心方向 (l=0, b=0)
+  const ygRaw = [zg[1] * xg[2] - zg[2] * xg[1], zg[2] * xg[0] - zg[0] * xg[2], zg[0] * xg[1] - zg[1] * xg[0]];
+  const yn = Math.hypot(ygRaw[0], ygRaw[1], ygRaw[2]);
+  _galBasis = { zg, xg, yg: [ygRaw[0] / yn, ygRaw[1] / yn, ygRaw[2] / yn] };
+  return _galBasis;
+}
+function galOf(v) {
+  const { zg, xg, yg } = galBasis();
+  return [
+    Math.atan2(v[0] * yg[0] + v[1] * yg[1] + v[2] * yg[2], v[0] * xg[0] + v[1] * xg[1] + v[2] * xg[2]) * 180 / Math.PI,
+    Math.asin(Math.max(-1, Math.min(1, v[0] * zg[0] + v[1] * zg[1] + v[2] * zg[2]))) * 180 / Math.PI,
+  ];
+}
+let _milkyBandCache = null;
+function milkyBand() {
+  if (_milkyBandCache) return _milkyBandCache;
+  const loops = MILKY_WAY.map(ring => {
+    const pts = ring.map(([ra, dec]) => galOf(unitVec(ra, dec)));
+    const u = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      let [l, b] = pts[i];
+      while (l - u[u.length - 1][0] > 180) l -= 360;
+      while (l - u[u.length - 1][0] < -180) l += 360;
+      u.push([l, b]);
+    }
+    if (u[u.length - 1][0] < u[0][0]) u.reverse(); // l 増加順に
+    return u;
+  });
+  loops.sort((a, b) => (a.reduce((s, p) => s + p[1], 0) / a.length) - (b.reduce((s, p) => s + p[1], 0) / b.length));
+  const bAt = (u, lq) => {
+    let l = lq;
+    while (l < u[0][0]) l += 360;
+    while (l > u[0][0] + 360) l -= 360;
+    for (let i = 0; i < u.length - 1; i++) {
+      if (l >= u[i][0] && l <= u[i + 1][0]) {
+        const t = u[i + 1][0] === u[i][0] ? 0 : (l - u[i][0]) / (u[i + 1][0] - u[i][0]);
+        return u[i][1] + t * (u[i + 1][1] - u[i][1]);
+      }
+    }
+    return u[u.length - 1][1];
+  };
+  const N = 720, south = new Float64Array(N), north = new Float64Array(N);
+  for (let k = 0; k < N; k++) {
+    const l = k * 0.5;
+    south[k] = bAt(loops[0], l);
+    north[k] = bAt(loops[loops.length - 1], l);
+  }
+  _milkyBandCache = { south, north, n: N };
+  return _milkyBandCache;
+}
+function inMilkyBand(band, l, b) {
+  const k = Math.floor((((l % 360) + 360) % 360) / 360 * band.n) % band.n;
+  return b > band.south[k] && b < band.north[k];
 }
 function drawSkyChart(lat, lon, when) {
   const cv = $('skyChart');
@@ -355,20 +419,39 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillText(name, x + 8, y + 4);
   };
   // 天の川（外側輪郭2本で塗る・輪郭線はなし。MILKY_WAY は scripts/build-milkyway.py で算出）
+  // 投影面でポリゴンを fill すると地平線下の経路や天頂付近の自己交差で崩れるため、
+  // 円盤内の格子点を銀河座標に変換し、帯の内側（南・北の外周の間）かを判定して塗る。
   if (state.showMilkyWay && typeof MILKY_WAY !== 'undefined') {
+    const band = milkyBand();
+    const jd = julianDay(when), T = (jd - 2451545.0) / 36525;
+    let gmst = (280.46061837 + 360.98564736629 * (jd - 2451545) + 0.000387933 * T * T) % 360;
+    if (gmst < 0) gmst += 360;
+    const lst = (gmst + lon) * Math.PI / 180, latr = lat * Math.PI / 180;
+    const up = [Math.cos(latr) * Math.cos(lst), Math.cos(latr) * Math.sin(lst), Math.sin(latr)];
+    const north = [-Math.sin(latr) * Math.cos(lst), -Math.sin(latr) * Math.sin(lst), Math.cos(latr)];
+    // 東方向は赤経増加と逆向き（地平座標の東 = 赤道座標では [sin LST, -cos LST, 0]）。逆にすると東西反転する
+    const east = [Math.sin(lst), -Math.cos(lst), 0];
     ctx.fillStyle = red ? 'rgba(255,150,150,0.16)' : (isDarkPair() ? 'rgba(200,205,220,0.22)' : 'rgba(150,155,170,0.30)');
-    for (const ring of MILKY_WAY) {
-      ctx.beginPath();
-      let started = false;
-      for (const [ra, dec] of ring) {
-        const p = altAz(ra, dec, when, lat, lon);
-        if (p.alt < 0) { started = false; continue; }
-        const [px, py] = xy(p.az, p.alt);
-        if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+    const step = 4;
+    for (let gy = cy - R; gy <= cy + R; gy += step) {
+      for (let gx = cx - R; gx <= cx + R; gx += step) {
+        const dx = gx - cx, dy = gy - cy, r = Math.hypot(dx, dy);
+        if (r > R) continue;
+        const alt = (90 - r / R * 90) * Math.PI / 180;
+        const az = Math.atan2(-dx, -dy);
+        const ca = Math.cos(alt);
+        const v = [
+          east[0] * ca * Math.sin(az) + north[0] * ca * Math.cos(az) + up[0] * Math.sin(alt),
+          east[1] * ca * Math.sin(az) + north[1] * ca * Math.cos(az) + up[1] * Math.sin(alt),
+          east[2] * ca * Math.sin(az) + north[2] * ca * Math.cos(az) + up[2] * Math.sin(alt),
+        ];
+        const [l, b] = galOf(v);
+        if (inMilkyBand(band, l, b)) ctx.fillRect(gx - step / 2, gy - step / 2, step, step);
       }
-      ctx.closePath();
-      ctx.fill('evenodd');
     }
+    ctx.restore();
   }
   // 黄道（ラベルなし）: 黄道緯度0°の円を2°刻みでサンプルし、地平線下で途切る
   if (state.showEcliptic) {
