@@ -2,7 +2,7 @@
 /* 一等星（視等級 1.5 以下・22星）の位置
  * 座標・等級出典: d3-celestial (ofrohn/d3-celestial) data/stars.6.json
  *   ライセンス: BSD 3-Clause License。J2000 赤経（度, 0-360）・赤緯（度）。lon が負の値は +360 済み。
- *   同一の Kaid（α Centauri A/B）は重なるため主星（Rigil Kentaurus）のみを残し、計22星とする
+ *   同一星系の α Centauri A/B は重なるため主星（Rigil Kentaurus）のみを残し、計22星とする
  *   （Wikipedia「First-magnitude star」の22星に一致。規格は等級 < 1.5 だが Adhara 1.50 も含める）。
  * 和名は一般的な呼び名。描画は app.js の drawSkyChart が altAz で変換する。外部取得しない。
  */
