@@ -265,7 +265,9 @@ function drawTrajectory(lat, lon, date) {
   ctx.fillText('実線=太陽 / 破線=月（数字は時刻）', padL + 4, padT + 12);
 }
 
-/* 全天図（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を右。
+/* 全天図（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
+ * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
+ * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は既存 astro.js の sunAltAz/moonAltAz を使用。惑星・星座は後続PR。 */
 function drawSkyChart(lat, lon, date, time) {
   const cv = $('skyChart');
@@ -284,7 +286,7 @@ function drawSkyChart(lat, lon, date, time) {
   const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 28;
   const xy = (az, alt) => {
     const r = R * (90 - alt) / 90, a = az * Math.PI / 180;
-    return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+    return [cx - r * Math.sin(a), cy - r * Math.cos(a)];
   };
   // 高度グリッド（30/60）と地平線
   ctx.strokeStyle = grid; ctx.lineWidth = 1;
