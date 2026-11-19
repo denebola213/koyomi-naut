@@ -434,7 +434,7 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillStyle = red ? 'rgba(255,150,150,0.16)' : (isDarkPair() ? 'rgba(200,205,220,0.22)' : 'rgba(150,155,170,0.30)');
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
-    const step = 4;
+    const step = 2;
     for (let gy = cy - R; gy <= cy + R; gy += step) {
       for (let gx = cx - R; gx <= cx + R; gx += step) {
         const dx = gx - cx, dy = gy - cy, r = Math.hypot(dx, dy);
