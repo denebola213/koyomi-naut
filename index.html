@@ -64,7 +64,6 @@
     <div class="row">
       <input id="dateInput" type="date" aria-label="日付">
       <button id="todayBtn" type="button">今日</button>
-      <span class="note">時刻は端末のタイムゾーンで表示</span>
     </div>
   </section>
   </section><!-- /入力ゾーン -->
@@ -91,14 +90,13 @@
 
     <div role="tabpanel" id="panel-events" aria-labelledby="tab-events" class="view-panel">
   <section aria-labelledby="h-events">
-    <h3 id="h-events">出没・薄明</h3>
+    <h3 id="h-events">出没・薄明 <button type="button" class="help-btn" id="twilightHelpBtn" aria-haspopup="dialog" aria-label="天文薄明の説明">?</button></h3>
     <div id="timeline" class="timeline" aria-label="指定日00:00から翌日日の出までの出没・薄明タイムライン"></div>
     <dl class="event-details">
       <div><dt>太陽最大高度</dt><dd id="evSunMax">—</dd></div>
       <div><dt>昼の長さ</dt><dd id="evDayLength">—</dd></div>
       <div><dt>暗夜の長さ</dt><dd id="evNightLength">—</dd></div>
     </dl>
-    <p class="note">天文薄明は太陽高度 −18° の潜没（開始）・出現（終了）時刻。「翌」は翌日を指す。</p>
     <div class="moon-phase">
       <canvas id="moonCanvas" width="120" height="120" aria-label="月相イメージ図"></canvas>
       <div>
@@ -152,6 +150,12 @@
 <dialog id="placeHelpDialog" class="help-dialog" aria-labelledby="placeHelpTitle">
   <h2 id="placeHelpTitle">地名検索について</h2>
   <p>市町村・大字・町丁目・小字（字）名で検索し、候補から場所を選んでください。座標は大字・町丁目の代表点です。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
+
+<dialog id="twilightHelpDialog" class="help-dialog" aria-labelledby="twilightHelpTitle">
+  <h2 id="twilightHelpTitle">天文薄明について</h2>
+  <p>天文薄明は太陽高度 −18° の潜没（開始）・出現（終了）時刻。「翌」は翌日を指す。</p>
   <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
 </dialog>
 

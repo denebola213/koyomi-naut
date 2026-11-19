@@ -713,6 +713,20 @@ function init() {
     });
   }
 
+  /* 「天文薄明」説明ポップアップ */
+  const twilightHelpBtn = $('twilightHelpBtn');
+  const twilightHelpDialog = $('twilightHelpDialog');
+  if (twilightHelpBtn && twilightHelpDialog) {
+    twilightHelpBtn.addEventListener('click', () => {
+      if (typeof twilightHelpDialog.showModal === 'function') twilightHelpDialog.showModal();
+      else twilightHelpDialog.setAttribute('open', '');
+    });
+    twilightHelpDialog.addEventListener('click', e => {
+      const r = twilightHelpDialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) twilightHelpDialog.close();
+    });
+  }
+
   /* 「遠近」説明ポップアップ */
   const moonHelpBtn = $('moonHelpBtn');
   const moonHelpDialog = $('moonHelpDialog');

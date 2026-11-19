@@ -36,7 +36,7 @@ if leaked:
 # 全天図（空のようす）の時刻スライダー timeSlider・「現在」ボタン nowBtn と表示切替（planetToggle/constellationToggle/starToggle/eclipticToggle/milkyWayToggle/constellationNameToggle）は
 # 結果ゾーン内の例外（空のようすパネルに近接させる指示のため許可）
 ctrl = [i for kind, i in re.findall(r'<(input|button|select)[^>]*id="([^"]+)"', res)
-        if i not in ('moonHelpBtn', 'skyHelpBtn', 'tab-events', 'tab-sky', 'timeSlider', 'nowBtn', 'planetToggle', 'constellationToggle', 'starToggle', 'eclipticToggle', 'milkyWayToggle', 'constellationNameToggle')]
+        if i not in ('moonHelpBtn', 'skyHelpBtn', 'twilightHelpBtn', 'tab-events', 'tab-sky', 'timeSlider', 'nowBtn', 'planetToggle', 'constellationToggle', 'starToggle', 'eclipticToggle', 'milkyWayToggle', 'constellationNameToggle')]
 if ctrl:
     problems.append(f'結果ゾーンに入力控件が漏れている: {ctrl}')
 
