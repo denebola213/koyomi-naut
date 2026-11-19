@@ -28,8 +28,7 @@
   <section class="zone zone-input" aria-labelledby="h-input">
     <h2 id="h-input">入力</h2>
   <section aria-labelledby="h-place">
-    <h3 id="h-place">場所</h3>
-    <p class="note">場所の指定方法を1つ選んでください。</p>
+    <h3 id="h-place">場所 <button type="button" class="help-btn" id="placeHelpBtn" aria-haspopup="dialog" aria-label="地名検索の説明">?</button></h3>
     <div class="place-tabs" role="tablist" aria-label="場所の指定方法">
       <button type="button" role="tab" id="tab-place" aria-controls="panel-place" aria-selected="true" data-panel="panel-place">地名から探す</button>
       <button type="button" role="tab" id="tab-gps" aria-controls="panel-gps" aria-selected="false" tabindex="-1" data-panel="panel-gps">現在地を使う</button>
@@ -37,7 +36,6 @@
     </div>
 
     <div role="tabpanel" id="panel-place" aria-labelledby="tab-place" class="place-panel">
-      <p class="note">市町村・大字・町丁目・小字（字）名で検索し、候補から場所を選んでください。座標は大字・町丁目の代表点です。</p>
       <div class="row">
         <input id="placeSearch" type="search" inputmode="search" autocomplete="off"
                placeholder="地名を検索（例: 千代田区 / 霞が関 / かすみがせき）" aria-label="地名検索">
@@ -46,14 +44,12 @@
     </div>
 
     <div role="tabpanel" id="panel-gps" aria-labelledby="tab-gps" class="place-panel" hidden>
-      <p class="note">端末のGPSで現在地を取得します。取得後、その位置が計算に使われます。</p>
       <div class="row">
         <button id="gpsBtn" type="button">GPS で取得</button>
       </div>
     </div>
 
     <div role="tabpanel" id="panel-coords" aria-labelledby="tab-coords" class="place-panel" hidden>
-      <p class="note">緯度・経度を10進数で入力してください。適用後、その座標が計算に使われます。</p>
       <div class="row coords">
         <label>緯度 <input id="latInput" inputmode="decimal" aria-label="緯度"></label>
         <label>経度 <input id="lonInput" inputmode="decimal" aria-label="経度"></label>
@@ -68,7 +64,6 @@
     <div class="row">
       <input id="dateInput" type="date" aria-label="日付">
       <button id="todayBtn" type="button">今日</button>
-      <span class="note">時刻は端末のタイムゾーンで表示</span>
     </div>
   </section>
   </section><!-- /入力ゾーン -->
@@ -95,14 +90,13 @@
 
     <div role="tabpanel" id="panel-events" aria-labelledby="tab-events" class="view-panel">
   <section aria-labelledby="h-events">
-    <h3 id="h-events">出没・薄明</h3>
+    <h3 id="h-events">出没・薄明 <button type="button" class="help-btn" id="twilightHelpBtn" aria-haspopup="dialog" aria-label="天文薄明の説明">?</button></h3>
     <div id="timeline" class="timeline" aria-label="指定日00:00から翌日日の出までの出没・薄明タイムライン"></div>
     <dl class="event-details">
       <div><dt>太陽最大高度</dt><dd id="evSunMax">—</dd></div>
       <div><dt>昼の長さ</dt><dd id="evDayLength">—</dd></div>
       <div><dt>暗夜の長さ</dt><dd id="evNightLength">—</dd></div>
     </dl>
-    <p class="note">天文薄明は太陽高度 −18° の潜没（開始）・出現（終了）時刻。「翌」は翌日を指す。</p>
     <div class="moon-phase">
       <canvas id="moonCanvas" width="120" height="120" aria-label="月相イメージ図"></canvas>
       <div>
@@ -152,6 +146,18 @@
     <p class="note">© 2026 denebola213（MIT License） — <a href="https://github.com/denebola213/koyomi-naut" target="_blank" rel="noopener">ソースコード（GitHub）</a></p>
   </footer>
 </main>
+
+<dialog id="placeHelpDialog" class="help-dialog" aria-labelledby="placeHelpTitle">
+  <h2 id="placeHelpTitle">地名検索について</h2>
+  <p>市町村・大字・町丁目・小字（字）名で検索し、候補から場所を選んでください。座標は大字・町丁目の代表点です。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
+
+<dialog id="twilightHelpDialog" class="help-dialog" aria-labelledby="twilightHelpTitle">
+  <h2 id="twilightHelpTitle">天文薄明について</h2>
+  <p>天文薄明は太陽高度 −18° の潜没（開始）・出現（終了）時刻。「翌」は翌日を指す。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
 
 <dialog id="moonHelpDialog" class="help-dialog" aria-labelledby="moonHelpTitle">
   <h2 id="moonHelpTitle">遠近について</h2>

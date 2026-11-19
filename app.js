@@ -699,6 +699,34 @@ function init() {
   $('milkyWayToggle').addEventListener('change', e => { state.showMilkyWay = e.target.checked; save(); render(); });
   $('constellationNameToggle').addEventListener('change', e => { state.showConstellationNames = e.target.checked; save(); render(); });
 
+  /* 「地名検索」説明ポップアップ */
+  const placeHelpBtn = $('placeHelpBtn');
+  const placeHelpDialog = $('placeHelpDialog');
+  if (placeHelpBtn && placeHelpDialog) {
+    placeHelpBtn.addEventListener('click', () => {
+      if (typeof placeHelpDialog.showModal === 'function') placeHelpDialog.showModal();
+      else placeHelpDialog.setAttribute('open', '');
+    });
+    placeHelpDialog.addEventListener('click', e => {
+      const r = placeHelpDialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) placeHelpDialog.close();
+    });
+  }
+
+  /* 「天文薄明」説明ポップアップ */
+  const twilightHelpBtn = $('twilightHelpBtn');
+  const twilightHelpDialog = $('twilightHelpDialog');
+  if (twilightHelpBtn && twilightHelpDialog) {
+    twilightHelpBtn.addEventListener('click', () => {
+      if (typeof twilightHelpDialog.showModal === 'function') twilightHelpDialog.showModal();
+      else twilightHelpDialog.setAttribute('open', '');
+    });
+    twilightHelpDialog.addEventListener('click', e => {
+      const r = twilightHelpDialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) twilightHelpDialog.close();
+    });
+  }
+
   /* 「遠近」説明ポップアップ */
   const moonHelpBtn = $('moonHelpBtn');
   const moonHelpDialog = $('moonHelpDialog');
