@@ -285,10 +285,10 @@ function drawTrajectory(lat, lon, date) {
   ctx.fillText('実線=太陽 / 破線=月（数字は時刻）', padL + 4, padT + 12);
 }
 
-/* 空のようす（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
+/* 空のようす: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
  * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
- * 太陽・月は既存 astro.js の sunAltAz/moonAltAz を使用。惑星・星座は後続PR。 */
+ * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）。 */
 function drawSkyChart(lat, lon, when) {
   const cv = $('skyChart');
   if (!cv) return;
@@ -320,17 +320,48 @@ function drawSkyChart(lat, lon, when) {
     const [hx, hy] = xy(az, 0);
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
   }
-  ctx.fillStyle = dim; ctx.fillText('天頂', cx - 12, cy + 4);
   const body = (name, p, color) => {
-    if (p.alt < 0) { ctx.fillStyle = dim; ctx.fillText(`${name}: 地平線下`, 10, 18); return; }
+    if (!p || p.alt < 0) return;
     const [x, y] = xy(p.az, p.alt);
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillText(name, x + 8, y + 4);
   };
-  body('太陽', sunAltAz(when, lat, lon), red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'));
-  body('月', moonAltAz(when, lat, lon), red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'));
+  // 星座の結び（線のみ）: 地平線円でクリップし、はみ出しを切る
+  if (state.showConstellations && typeof CONSTELLATIONS !== 'undefined') {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+    ctx.strokeStyle = red ? '#7a2b2b' : (isDarkPair() ? '#555c6e' : '#b8bcc4');
+    ctx.lineWidth = 1;
+    for (const c of CONSTELLATIONS) {
+      for (const line of c.lines) {
+        ctx.beginPath();
+        let started = false;
+        for (const [ra, dec] of line) {
+          const p = altAz(ra, dec, when, lat, lon);
+          if (p.alt < 0) { started = false; continue; } // 地平線下で線を途切る
+          const [x, y] = xy(p.az, p.alt);
+          if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  const below = [];
+  const drawBody = (name, p, color) => {
+    if (!p) return;
+    if (p.alt < 0) { below.push(name); return; }
+    body(name, p, color);
+  };
+  drawBody('太陽', sunAltAz(when, lat, lon), red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'));
+  drawBody('月', moonAltAz(when, lat, lon), red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'));
+  if (state.showPlanets && typeof planetsAltAz === 'function') {
+    const planetColor = red ? '#ff9a9a' : (isDarkPair() ? '#e6c87a' : '#8a6d1a');
+    for (const p of planetsAltAz(when, lat, lon)) drawBody(p.name, p, planetColor);
+  }
   ctx.fillStyle = dim;
-  ctx.fillText(`${fmtSkyWhen(when)}・惑星/星座は準備中（モック）`, 10, H - 10);
+  const belowTxt = below.length ? `${below.join('・')}は地平線下` : '太陽・月・惑星はすべて地平線上';
+  ctx.fillText(`${fmtSkyWhen(when)}・${belowTxt}`, 10, H - 10);
 }
 
 /* ---------- イベント ---------- */
