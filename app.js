@@ -147,7 +147,6 @@ function fmtSkyWhen(w) {
 }
 function updateTimeLabels() {
   const label = fmtSkyWhen(skyWhen());
-  setText('timeLabel', label);
   setText('skyTimeLabel', label);
 }
 function render() {
