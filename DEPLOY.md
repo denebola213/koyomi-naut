@@ -30,8 +30,10 @@ squash merge する**。マージした `main` だけが本番デプロイの対
    gh pr create --base main --title "<type>: <内容>" --body "..."
    ```
 
-   PR 本文には「何を変更したか / 検証結果 / 注意点」を書く
+   PR 本文には「何を変更したか / ステージURL / 検証結果 / 注意点」を書く
    （テンプレート: `.github/pull_request_template.md`）。
+   ステージURL は PR 作成直後には未発行のため、作成時はプレースホルダでなく
+   「デプロイ成功後に記入」の旨を残し、次項で本文を更新して実 URL を貼る。
 
 4. **ステージング（プレビュー）確認**
 
@@ -40,8 +42,12 @@ squash merge する**。マージした `main` だけが本番デプロイの対
    - プレビュー URL は PR への Cloudflare コメント、および
      Pages の Deployments 一覧（`https://<hash>.koyomi-naut.pages.dev`）で確認できる。
    - エージェントはデプロイ成功（Deployments API の `latest_stage.status = success`）と
-     プレビュー URL の 200 を確認し、URL を PR / 作業報告に載せる。
-   - ユーザーがプレビュー URL で見た目・動作を確認する。
+     プレビュー URL の 200 を確認し、URL を **PR 本文の「ステージURL」に貼る**
+     （作成直後は未発行のため、確認後に本文を更新する:
+     `gh pr edit <PR番号> --body-file <本文ファイル>`。
+     Cloudflare コメントへの投稿や作業報告への記載だけでは本文に載らない）。
+     貼った後は `gh pr view <PR番号>` で本文に URL が入ったことを確認する。
+   - ユーザーがステージURL で見た目・動作を確認する。
 
 5. **レビュー OK → squash merge**
 

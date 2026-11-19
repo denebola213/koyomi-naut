@@ -53,7 +53,7 @@
 
 ### キャッシュ・デプロイ
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v22 現在）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v48 現在）。
 - Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
 - デプロイは Cloudflare Pages（Git 連携）。`main` への直接 push は禁止——
   **branch → PR → プレビュー URL で確認 → ユーザー OK → squash merge → 本番**。
@@ -71,6 +71,9 @@
 - 作業は `<type>/<short-desc>` ブランチ（例: `feat/...`, `fix/...`, `docs/...`）で行い、PR を作る。
 - PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
   （`preview_deployment_setting = "all"`、URL は PR コメントにも貼られる）。
+- **ステージURL は PR 本文の「ステージURL」に貼る**。PR 作成直後は未発行のため、
+  デプロイ成功と 200 を確認した後に `gh pr edit <番号> --body-file <本文>` で
+  本文を更新して実 URL を記入し、`gh pr view` で確認する（手順は `DEPLOY.md`）。
 - **マージはユーザーの OK が出た場合のみ**実行する（先行マージ禁止）。
   リポジトリは squash merge のみ可（`gh pr merge <n> --squash --delete-branch`）。
 - マージで `main` が進むと本番デプロイが自動発行される。push / merge 成功だけでなく
