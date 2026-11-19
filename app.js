@@ -227,12 +227,11 @@ function renderTimeline(ev, fmtAstro) {
   }
 }
 
-/* 月相イメージ図（北半球: 満ちる=右側が照る） */
-function drawMoonPhase(age) {
-  const cv = $('moonCanvas');
+/* 月相イメージ図（北半球: 満ちる=右側が照る）。結果ゾーンの大図と月齢カレンダーの小図で共通 */
+function drawMoonPhaseInto(cv, age, S) {
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const S = 120, cx = S / 2, cy = S / 2, r = 52;
+  const cx = S / 2, cy = S / 2, r = S * 52 / 120;
   const red = isRedTheme();
   ctx.clearRect(0, 0, S, S);
   // 暗部
@@ -251,6 +250,9 @@ function drawMoonPhase(age) {
   }
   ctx.strokeStyle = red ? '#d98c8c' : (isDarkPair() ? '#8a8f9a' : '#9a9da6');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+}
+function drawMoonPhase(age) {
+  drawMoonPhaseInto($('moonCanvas'), age, 120);
 }
 
 /* 軌道図: 横=方位(北0→東→南→西→北), 縦=高度(-20〜90) */
@@ -591,8 +593,12 @@ function renderMoonCalendar() {
     b.setAttribute('aria-label', `${moonCalY}年${moonCalM + 1}月${d}日、月齢 ${age.toFixed(1)} 日${quarter ? '、' + quarter : ''}`);
     if (ds === state.date) b.setAttribute('aria-current', 'date');
     const num = document.createElement('span'); num.className = 'moon-cal-num'; num.textContent = d;
+    const img = document.createElement('canvas');
+    img.className = 'moon-cal-img'; img.width = 24; img.height = 24;
+    img.setAttribute('aria-hidden', 'true');
+    drawMoonPhaseInto(img, age, 24);
     const ag = document.createElement('span'); ag.className = 'moon-cal-age'; ag.textContent = age.toFixed(1);
-    b.append(num, ag);
+    b.append(num, img, ag);
     if (quarter) {
       const q = document.createElement('span'); q.className = 'moon-cal-quarter'; q.textContent = quarter;
       b.appendChild(q);
