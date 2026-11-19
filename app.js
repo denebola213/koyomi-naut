@@ -187,6 +187,7 @@ function render() {
   // 見えているパネルだけ描画（hidden 中の canvas は clientWidth=0）
   if (state.view === 'sky') drawSkyChart(lat, lon, skyWhen());
   else drawTrajectory(lat, lon, date);
+  renderMoonCalendar();
 }
 
 /* 指定日 00:00 から翌日日の出までの全イベントを時刻順に並べる縦タイムライン */
@@ -226,12 +227,11 @@ function renderTimeline(ev, fmtAstro) {
   }
 }
 
-/* 月相イメージ図（北半球: 満ちる=右側が照る） */
-function drawMoonPhase(age) {
-  const cv = $('moonCanvas');
+/* 月相イメージ図（北半球: 満ちる=右側が照る）。結果ゾーンの大図と月齢カレンダーの小図で共通 */
+function drawMoonPhaseInto(cv, age, S) {
   if (!cv) return;
   const ctx = cv.getContext('2d');
-  const S = 120, cx = S / 2, cy = S / 2, r = 52;
+  const cx = S / 2, cy = S / 2, r = S * 52 / 120;
   const red = isRedTheme();
   ctx.clearRect(0, 0, S, S);
   // 暗部
@@ -250,6 +250,9 @@ function drawMoonPhase(age) {
   }
   ctx.strokeStyle = red ? '#d98c8c' : (isDarkPair() ? '#8a8f9a' : '#9a9da6');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+}
+function drawMoonPhase(age) {
+  drawMoonPhaseInto($('moonCanvas'), age, 120);
 }
 
 /* 軌道図: 横=方位(北0→東→南→西→北), 縦=高度(-20〜90) */
@@ -558,6 +561,61 @@ function drawSkyChart(lat, lon, when) {
   ctx.fillText(belowTxt, 10, H - 10);
 }
 
+/* ---------- 月齢カレンダー（日付入力の補助・折りたたみ） ---------- */
+/* 表示月は state.date と独立に保持し、前月/翌月ボタンでだけ移動する。
+ * 各日セルは正午の moonAge()（結果ゾーンの月齢表示と同じ基準）。 */
+let moonCalY = null, moonCalM = null; // m: 0-11
+function syncMoonCalMonth() {
+  const d = new Date(`${state.date}T12:00:00`);
+  if (!isNaN(d)) { moonCalY = d.getFullYear(); moonCalM = d.getMonth(); }
+}
+function renderMoonCalendar() {
+  const grid = $('moonCalGrid'); if (!grid) return;
+  if (moonCalY == null || moonCalM == null) syncMoonCalMonth();
+  if (moonCalY == null) return;
+  const p2 = n => String(n).padStart(2, '0');
+  setText('moonCalTitle', `${moonCalY}年${moonCalM + 1}月`);
+  grid.innerHTML = '';
+  const firstDow = new Date(moonCalY, moonCalM, 1).getDay(); // 0=日曜
+  const daysInMonth = new Date(moonCalY, moonCalM + 1, 0).getDate();
+  for (let i = 0; i < firstDow; i++) {
+    const s = document.createElement('span'); grid.appendChild(s);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${moonCalY}-${p2(moonCalM + 1)}-${p2(d)}`;
+    const noon = new Date(moonCalY, moonCalM, d, 12, 0, 0);
+    const age = moonAge(noon);
+    const quarter = moonPhaseName(noon);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'moon-cal-day' + (quarter ? ' is-quarter' : '') + (ds === state.date ? ' is-selected' : '');
+    b.dataset.date = ds;
+    b.setAttribute('aria-label', `${moonCalY}年${moonCalM + 1}月${d}日、月齢 ${age.toFixed(1)} 日${quarter ? '、' + quarter : ''}`);
+    if (ds === state.date) b.setAttribute('aria-current', 'date');
+    const num = document.createElement('span'); num.className = 'moon-cal-num'; num.textContent = d;
+    const img = document.createElement('canvas');
+    img.className = 'moon-cal-img'; img.width = 24; img.height = 24;
+    img.setAttribute('aria-hidden', 'true');
+    drawMoonPhaseInto(img, age, 24);
+    const ag = document.createElement('span'); ag.className = 'moon-cal-age'; ag.textContent = age.toFixed(1);
+    b.append(num, img, ag);
+    if (quarter) {
+      const q = document.createElement('span'); q.className = 'moon-cal-quarter'; q.textContent = quarter;
+      b.appendChild(q);
+    }
+    b.addEventListener('click', () => {
+      state.date = ds; $('dateInput').value = ds; save(); render();
+    });
+    grid.appendChild(b);
+  }
+}
+function shiftMoonCalMonth(delta) {
+  if (moonCalY == null) syncMoonCalMonth();
+  const d = new Date(moonCalY, moonCalM + delta, 1);
+  moonCalY = d.getFullYear(); moonCalM = d.getMonth();
+  renderMoonCalendar();
+}
+
 /* ---------- イベント ---------- */
 function init() {
   load();
@@ -568,6 +626,7 @@ function init() {
   const toggle = $('themeToggle');
   if (toggle) toggle.addEventListener('click', () => { applyTheme(!isRedTheme()); render(); });
   state.date = state.date || todayStr();
+  syncMoonCalMonth();
   // 空のようすの初期値は現在時刻（保存値より優先）。範囲外の日付は今日に合わせる
   resetSkyToNow();
   $('dateInput').value = state.date;
@@ -668,8 +727,10 @@ function init() {
     if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) { alert('緯度 -90〜90、経度 -180〜180 を入力してください'); return; }
     setPlace(lat, lon, '手入力の座標');
   });
-  $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); save(); render(); });
-  $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
+  $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); syncMoonCalMonth(); save(); render(); });
+  $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; syncMoonCalMonth(); save(); render(); });
+  $('moonCalPrev').addEventListener('click', () => shiftMoonCalMonth(-1));
+  $('moonCalNext').addEventListener('click', () => shiftMoonCalMonth(1));
   $('planetToggle').checked = state.showPlanets;
   $('constellationToggle').checked = state.showConstellations;
   $('starToggle').checked = state.showStars;
@@ -688,6 +749,7 @@ function init() {
   $('nowBtn').addEventListener('click', () => {
     resetSkyToNow(true);
     $('dateInput').value = state.date;
+    syncMoonCalMonth();
     $('timeSlider').value = state.skyOffsetMin;
     save();
     render();
