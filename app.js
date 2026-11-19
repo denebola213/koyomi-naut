@@ -354,12 +354,9 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillText(name, x + 8, y + 4);
   };
-  // 天の川（輪郭線のみ・塗らない）: 地平線下で途切る。最下層に描く
+  // 天の川（外側輪郭2本で塗る・輪郭線はなし。MILKY_WAY は scripts/build-milkyway.py で算出）
   if (state.showMilkyWay && typeof MILKY_WAY !== 'undefined') {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
-    ctx.strokeStyle = red ? 'rgba(255,150,150,0.8)' : (isDarkPair() ? 'rgba(210,215,230,0.95)' : 'rgba(110,115,130,0.95)');
-    ctx.lineWidth = 1.8;
+    ctx.fillStyle = red ? 'rgba(255,150,150,0.16)' : (isDarkPair() ? 'rgba(200,205,220,0.22)' : 'rgba(150,155,170,0.30)');
     for (const ring of MILKY_WAY) {
       ctx.beginPath();
       let started = false;
@@ -369,9 +366,9 @@ function drawSkyChart(lat, lon, when) {
         const [px, py] = xy(p.az, p.alt);
         if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
       }
-      ctx.stroke();
+      ctx.closePath();
+      ctx.fill('evenodd');
     }
-    ctx.restore();
   }
   // 黄道（ラベルなし）: 黄道緯度0°の円を2°刻みでサンプルし、地平線下で途切る
   if (state.showEcliptic) {
