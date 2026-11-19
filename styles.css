@@ -44,6 +44,7 @@ select { padding: 5px 8px; font-size: 13px; }
 input[type="search"] { flex: 1 1 280px; }
 input[type="date"] { min-width: 160px; }
 input[type="decimal"] { width: 110px; }
+input[type="checkbox"] { accent-color: var(--accent); }
 button { cursor: pointer; }
 button:active { background: color-mix(in srgb, var(--ink) 8%, var(--paper)); }
 button:disabled { opacity: .5; cursor: default; }
