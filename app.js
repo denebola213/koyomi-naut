@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '' };
+const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', time: '21:00', view: 'events', showPlanets: true, showConstellations: true };
 const isRedTheme = () => document.documentElement.dataset.theme === 'red';
 const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -36,12 +36,18 @@ function setPlace(lat, lon, label) {
   render();
 }
 function save() {
-  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date })); } catch (e) {}
+  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, time: state.time, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations })); } catch (e) {}
 }
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem('skypwa-v1') || 'null');
-    if (s && typeof s.lat === 'number') { state.lat = s.lat; state.lon = s.lon; state.place = s.place || ''; state.date = s.date || ''; }
+    if (s && typeof s.lat === 'number') {
+      state.lat = s.lat; state.lon = s.lon; state.place = s.place || ''; state.date = s.date || '';
+      if (typeof s.time === 'string' && s.time) state.time = s.time;
+      if (s.view === 'sky' || s.view === 'events') state.view = s.view;
+      if (typeof s.showPlanets === 'boolean') state.showPlanets = s.showPlanets;
+      if (typeof s.showConstellations === 'boolean') state.showConstellations = s.showConstellations;
+    }
   } catch (e) {}
 }
 
@@ -104,7 +110,7 @@ function searchPlaces(rawQ) {
 
 /* ---------- 描画 ---------- */
 function render() {
-  const { lat, lon, date } = state;
+  const { lat, lon, date, time } = state;
   $('dmsLat').textContent = toDMS(lat, 'N', 'S');
   $('dmsLon').textContent = toDMS(lon, 'E', 'W');
   $('decLat').textContent = `(${lat.toFixed(4)}°)`;
@@ -112,6 +118,7 @@ function render() {
   // 確定した日付（結果ゾーン）: YYYY-MM-DD（曜）
   const wd = ['日', '月', '火', '水', '木', '金', '土'][new Date(date + 'T12:00:00').getDay()];
   setText('dateLabel', `${date}（${wd}）`);
+  setText('timeLabel', `${date} ${time || '21:00'}（${wd}）`);
 
   const ev = dayEvents(lat, lon, date);
   const fmtDur = min => min == null ? '—' : `${Math.floor(min / 60)}時間${Math.round(min % 60)}分`;
@@ -136,7 +143,9 @@ function render() {
   }
   setText('moonInfo', `照度 ${(m.illum * 100).toFixed(0)}%・距離 ${Math.round(m.dist)} km・遠近 ${distanceRatioPct(m.dist)}%`);
 
-  drawTrajectory(lat, lon, date);
+  // 見えているパネルだけ描画（hidden 中の canvas は clientWidth=0）
+  if (state.view === 'sky') drawSkyChart(lat, lon, date, time);
+  else drawTrajectory(lat, lon, date);
 }
 
 /* 指定日 00:00 から翌日日の出までの全イベントを時刻順に並べる縦タイムライン */
@@ -256,6 +265,54 @@ function drawTrajectory(lat, lon, date) {
   ctx.fillText('実線=太陽 / 破線=月（数字は時刻）', padL + 4, padT + 12);
 }
 
+/* 全天図（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を右。
+ * 太陽・月は既存 astro.js の sunAltAz/moonAltAz を使用。惑星・星座は後続PR。 */
+function drawSkyChart(lat, lon, date, time) {
+  const cv = $('skyChart');
+  if (!cv) return;
+  const t = time && /^\d{2}:\d{2}$/.test(time) ? time : '21:00';
+  const when = new Date(`${date}T${t}:00`);
+  if (isNaN(when)) return;
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = cv.clientWidth || 720, H = cv.clientHeight || 420;
+  cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const red = isRedTheme();
+  const ink = red ? '#ffd7d7' : (isDarkPair() ? '#d8d8d8' : '#222'), dim = red ? '#b05a5a' : (isDarkPair() ? '#666' : '#999'), grid = red ? '#4a1515' : (isDarkPair() ? '#333' : '#ddd');
+  ctx.clearRect(0, 0, W, H);
+  ctx.font = '11px system-ui, sans-serif';
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 28;
+  const xy = (az, alt) => {
+    const r = R * (90 - alt) / 90, a = az * Math.PI / 180;
+    return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  };
+  // 高度グリッド（30/60）と地平線
+  ctx.strokeStyle = grid; ctx.lineWidth = 1;
+  for (const alt of [30, 60]) {
+    ctx.beginPath(); ctx.arc(cx, cy, R * (90 - alt) / 90, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = dim; ctx.fillText(alt + '°', cx + 4, cy - R * (90 - alt) / 90 + 4);
+  }
+  ctx.strokeStyle = dim; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = dim;
+  for (const [az, lab] of [[0, 'N'], [90, 'E'], [180, 'S'], [270, 'W']]) {
+    const [x, y] = xy(az, -6);
+    ctx.textAlign = 'center'; ctx.fillText(lab, x, y); ctx.textAlign = 'left';
+    const [hx, hy] = xy(az, 0);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
+  }
+  ctx.fillStyle = dim; ctx.fillText('天頂', cx - 12, cy + 4);
+  const body = (name, p, color) => {
+    if (p.alt < 0) { ctx.fillStyle = dim; ctx.fillText(`${name}: 地平線下`, 10, 18); return; }
+    const [x, y] = xy(p.az, p.alt);
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText(name, x + 8, y + 4);
+  };
+  body('太陽', sunAltAz(when, lat, lon), red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'));
+  body('月', moonAltAz(when, lat, lon), red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'));
+  ctx.fillStyle = dim;
+  ctx.fillText(`${date} ${t}・惑星/星座は準備中（モック）`, 10, H - 10);
+}
+
 /* ---------- イベント ---------- */
 function init() {
   load();
@@ -292,6 +349,34 @@ function init() {
     });
   });
   activateTab(tabs[0], false);
+
+  /* 結果ビュー切替（出没・薄明 / 全天図）。場所タブと同型 + ハッシュ保持 */
+  const viewTabs = [...document.querySelectorAll('.view-tabs [role="tab"]')];
+  function activateView(tab, focus) {
+    for (const t of viewTabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      $(t.dataset.panel).hidden = !on;
+    }
+    state.view = tab && tab.dataset.panel === 'panel-sky' ? 'sky' : 'events';
+    try { history.replaceState(null, '', state.view === 'sky' ? '#sky' : '#events'); } catch (e) {}
+    save();
+    if (focus) tab.focus();
+    render();
+  }
+  viewTabs.forEach((t, i) => {
+    t.addEventListener('click', () => activateView(t, false));
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      activateView(viewTabs[(i + dir + viewTabs.length) % viewTabs.length], true);
+    });
+  });
+  // 初期表示: ハッシュ優先、無ければ保存値（既定=events）
+  const hashView = location.hash === '#sky' ? 'sky' : (location.hash === '#events' ? 'events' : state.view);
+  activateView(viewTabs.find(t => t.dataset.panel === (hashView === 'sky' ? 'panel-sky' : 'panel-events')) || viewTabs[0], false);
 
   const box = $('placeSearch'), list = $('placeResults');
   let searchTimer = null;
@@ -338,6 +423,12 @@ function init() {
   });
   $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); save(); render(); });
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
+  $('timeInput').value = state.time || '21:00';
+  $('planetToggle').checked = state.showPlanets;
+  $('constellationToggle').checked = state.showConstellations;
+  $('timeInput').addEventListener('change', e => { state.time = e.target.value || '21:00'; save(); render(); });
+  $('planetToggle').addEventListener('change', e => { state.showPlanets = e.target.checked; save(); render(); });
+  $('constellationToggle').addEventListener('change', e => { state.showConstellations = e.target.checked; save(); render(); });
 
   /* 「遠近」説明ポップアップ */
   const moonHelpBtn = $('moonHelpBtn');
@@ -353,7 +444,10 @@ function init() {
     });
   }
 
-  window.addEventListener('resize', () => drawTrajectory(state.lat, state.lon, state.date));
+  window.addEventListener('resize', () => {
+    if (state.view === 'sky') drawSkyChart(state.lat, state.lon, state.date, state.time);
+    else drawTrajectory(state.lat, state.lon, state.date);
+  });
   render();
 }
 document.addEventListener('DOMContentLoaded', init);
