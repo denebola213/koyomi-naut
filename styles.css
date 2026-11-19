@@ -36,10 +36,11 @@ body {
 .zone-input h3, .zone-result h3 { font-size: 16px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 650; }
 .zone-result > section { margin-top: 24px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
-input, button {
+input, button, select {
   font: inherit; color: inherit; background: var(--paper);
   border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
 }
+select { padding: 5px 8px; font-size: 13px; }
 input[type="search"] { flex: 1 1 280px; }
 input[type="date"] { min-width: 160px; }
 input[type="decimal"] { width: 110px; }
@@ -48,20 +49,23 @@ button:active { background: color-mix(in srgb, var(--ink) 8%, var(--paper)); }
 button:disabled { opacity: .5; cursor: default; }
 label { display: inline-flex; gap: 6px; align-items: center; }
 
-/* ---------- 場所タブ ---------- */
-.place-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-top: 8px; }
-.place-tabs [role="tab"] {
+/* ---------- 場所タブ / 結果ビュー切替タブ（同型） ---------- */
+.place-tabs, .view-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--line); margin-top: 8px; }
+.view-tabs { margin-top: 16px; }
+.place-tabs [role="tab"], .view-tabs [role="tab"] {
   border: 1px solid var(--line); border-bottom: 0; border-radius: 4px 4px 0 0;
   padding: 6px 12px; background: var(--result-bg); color: var(--dim);
   font-size: 13px; white-space: nowrap;
 }
-.place-tabs [role="tab"] + [role="tab"] { border-left: 0; }
-.place-tabs [role="tab"][aria-selected="true"] {
+.place-tabs [role="tab"] + [role="tab"], .view-tabs [role="tab"] + [role="tab"] { border-left: 0; }
+.place-tabs [role="tab"][aria-selected="true"], .view-tabs [role="tab"][aria-selected="true"] {
   background: var(--paper); color: var(--ink); font-weight: 650;
   border-bottom: 1px solid var(--paper); margin-bottom: -1px;
 }
-.place-panel { border: 1px solid var(--line); border-top: 0; padding: 12px; margin: 0 0 4px; }
-.place-panel[hidden] { display: none; }
+.place-panel, .view-panel { border: 1px solid var(--line); border-top: 0; padding: 12px; margin: 0 0 4px; }
+.place-panel[hidden], .view-panel[hidden] { display: none; }
+.view-panel > section { margin-top: 0; }
+input[type="time"] { min-width: 130px; }
 .results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .results .result { display: block; width: 100%; text-align: left; }
 
@@ -120,6 +124,19 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .event-details dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 canvas#traj { width: 100%; height: 360px; border: 1px solid var(--line); display: block; }
+/* 空のようす: パネルの罫線まで全幅に広げる（フルブリード）。上側のパディング・見出し余白は最小に */
+#panel-sky { padding: 0; }
+#panel-sky > section { margin-top: 0; }
+#panel-sky h3 { margin: 6px 12px 4px; }
+canvas#skyChart { width: 100%; height: auto; aspect-ratio: 1 / 1; border: 0; border-bottom: 1px solid var(--line); display: block; }
+#panel-sky .sky-time, #panel-sky .sky-display, #panel-sky > section > p.note { margin-left: 12px; margin-right: 12px; }
+#panel-sky .sky-time { margin-top: 8px; }
+.sky-time { margin-top: 12px; }
+.sky-time > label { display: block; font-weight: 650; margin-bottom: 6px; }
+.sky-time input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+.sky-time-range { display: flex; justify-content: space-between; color: var(--dim); font-size: 12px; margin-top: 2px; }
+.sky-display { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.sky-display-title { display: block; font-weight: 650; margin-bottom: 4px; }
 .moon-phase { display: flex; gap: 16px; align-items: center; margin-top: 16px; border: 1px solid var(--line); padding: 12px; }
 .moon-phase canvas { width: 120px; height: 120px; flex: 0 0 auto; }
 .moon-age { font-size: 20px; margin: 0 0 6px; font-variant-numeric: tabular-nums; }

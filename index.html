@@ -84,9 +84,16 @@
         <div><dt>緯度</dt><dd><span id="dmsLat">—</span> <span id="decLat" class="dim"></span></dd></div>
         <div><dt>経度</dt><dd><span id="dmsLon">—</span> <span id="decLon" class="dim"></span></dd></div>
         <div><dt>日付</dt><dd><span id="dateLabel">—</span></dd></div>
+        <div><dt>時刻</dt><dd><span id="timeLabel">—</span></dd></div>
       </dl>
     </div>
 
+    <div class="view-tabs" role="tablist" aria-label="結果の表示">
+      <button type="button" role="tab" id="tab-events" aria-controls="panel-events" aria-selected="true" data-panel="panel-events">出没・薄明</button>
+      <button type="button" role="tab" id="tab-sky" aria-controls="panel-sky" aria-selected="false" tabindex="-1" data-panel="panel-sky">空のようす</button>
+    </div>
+
+    <div role="tabpanel" id="panel-events" aria-labelledby="tab-events" class="view-panel">
   <section aria-labelledby="h-events">
     <h3 id="h-events">出没・薄明</h3>
     <div id="timeline" class="timeline" aria-label="指定日00:00から翌日日の出までの出没・薄明タイムライン"></div>
@@ -109,6 +116,31 @@
     <h3 id="h-traj">太陽と月の軌道</h3>
     <canvas id="traj" height="360" aria-label="太陽と月の軌道図"></canvas>
   </section>
+    </div><!-- /panel-events -->
+
+    <div role="tabpanel" id="panel-sky" aria-labelledby="tab-sky" class="view-panel" hidden>
+      <section aria-labelledby="h-sky">
+        <h3 id="h-sky">空のようす <button type="button" class="help-btn" id="skyHelpBtn" aria-haspopup="dialog" aria-label="空のようすの説明">?</button></h3>
+        <canvas id="skyChart" height="420" aria-label="空のようす（天頂を中心にした円盤）"></canvas>
+        <div class="sky-time">
+          <label for="timeSlider">時刻 <span id="skyTimeLabel">—</span></label>
+          <input id="timeSlider" type="range" min="-1080" max="1080" step="5" value="180"
+                 aria-label="空のようすの時刻（指定日18時からプラスマイナス18時間）">
+          <div class="sky-time-range" aria-hidden="true"><span>前日 00:00</span><span>指定日 18:00</span><span>翌日 12:00</span></div>
+        </div>
+        <div class="sky-display">
+          <span class="sky-display-title">表示</span>
+          <div class="row">
+            <label><input id="planetToggle" type="checkbox" checked> 惑星</label>
+            <label><input id="constellationToggle" type="checkbox" checked> 星座の結び</label>
+            <label><input id="starToggle" type="checkbox" checked> 一等星</label>
+            <label><input id="eclipticToggle" type="checkbox" checked> 黄道</label>
+            <label><input id="milkyWayToggle" type="checkbox" checked> 天の川</label>
+            <label><input id="constellationNameToggle" type="checkbox"> 星座名</label>
+          </div>
+        </div>
+      </section>
+    </div><!-- /panel-sky -->
   </section><!-- /結果ゾーン -->
 
   <footer>
@@ -124,8 +156,21 @@
   <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
 </dialog>
 
+<dialog id="skyHelpDialog" class="help-dialog" aria-labelledby="skyHelpTitle">
+  <h2 id="skyHelpTitle">空のようすについて</h2>
+  <p>中央が天頂（頭の真上）、外周が地平線の円盤です。北を上・東を左に置いています——画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるためです。円内の同心円は高度30°・60°を示します。</p>
+  <p>時刻スライダーは指定日18時を中心に前後18時間（前日00:00〜翌日12:00、5分刻み）を動かせます。太陽・月は点とラベル、惑星（水星〜土星）も点とラベルで示します。地平線下の天体は下部にまとめて表示します。</p>
+  <p>一等星は視等級1.5以下の22星で、惑星より小さい点です。表示時は名前も一緒に出ます。星座は88星座の結び（線のみ）で、星座名はその中心付近に表示します。黄道は線、天の川は外側輪郭で塗ります。</p>
+  <p>表示の切替はすべて「表示」行で行い、選択は保存されます。計算は端末内で完結し、通信しません。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
+
 <script src="municipalities.js"></script>
 <script src="astro.js"></script>
+<script src="planets.js"></script>
+<script src="constellations.js"></script>
+<script src="bright-stars.js"></script>
+<script src="milky-way.js"></script>
 <script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {

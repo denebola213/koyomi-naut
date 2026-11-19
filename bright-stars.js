@@ -1,0 +1,10 @@
+"use strict";
+/* 一等星（視等級 1.5 以下・22星）の位置
+ * 座標・等級出典: d3-celestial (ofrohn/d3-celestial) data/stars.6.json
+ *   ライセンス: BSD 3-Clause License。J2000 赤経（度, 0-360）・赤緯（度）。lon が負の値は +360 済み。
+ *   同一星系の α Centauri A/B は重なるため主星（Rigil Kentaurus）のみを残し、計22星とする
+ *   （Wikipedia「First-magnitude star」の22星に一致。規格は等級 < 1.5 だが Adhara 1.50 も含める）。
+ * 和名は一般的な呼び名。描画は app.js の drawSkyChart が altAz で変換する。外部取得しない。
+ */
+const BRIGHT_STARS = [{"name":"シリウス","en":"Sirius","mag":-1.44,"ra":101.2872,"dec":-16.7161},{"name":"カノープス","en":"Canopus","mag":-0.62,"ra":95.988,"dec":-52.6957},{"name":"アルクトゥルス","en":"Arcturus","mag":-0.05,"ra":213.9153,"dec":19.1824},{"name":"リギル・ケンタウルス","en":"Rigil Kentaurus","mag":-0.01,"ra":219.9021,"dec":-60.834},{"name":"ベガ","en":"Vega","mag":0.03,"ra":279.2347,"dec":38.7837},{"name":"カペラ","en":"Capella","mag":0.08,"ra":79.1723,"dec":45.998},{"name":"リゲル","en":"Rigel","mag":0.18,"ra":78.6345,"dec":-8.2016},{"name":"プロキオン","en":"Procyon","mag":0.4,"ra":114.8255,"dec":5.225},{"name":"アケルナル","en":"Achernar","mag":0.45,"ra":24.4285,"dec":-57.2368},{"name":"ベテルギウス","en":"Betelgeuse","mag":0.45,"ra":88.7929,"dec":7.4071},{"name":"ハダル","en":"Hadar","mag":0.61,"ra":210.9559,"dec":-60.373},{"name":"アルタイル","en":"Altair","mag":0.76,"ra":297.6958,"dec":8.8683},{"name":"アクルクス","en":"Acrux","mag":0.77,"ra":186.6496,"dec":-63.0991},{"name":"アルデバラン","en":"Aldebaran","mag":0.87,"ra":68.9802,"dec":16.5093},{"name":"スピカ","en":"Spica","mag":0.98,"ra":201.2982,"dec":-11.1613},{"name":"アンタレス","en":"Antares","mag":1.06,"ra":247.3519,"dec":-26.432},{"name":"ポルックス","en":"Pollux","mag":1.16,"ra":116.329,"dec":28.0262},{"name":"フォーマルハウト","en":"Fomalhaut","mag":1.17,"ra":344.4127,"dec":-29.6222},{"name":"ミモザ","en":"Mimosa","mag":1.25,"ra":191.9303,"dec":-59.6888},{"name":"デネブ","en":"Deneb","mag":1.25,"ra":310.358,"dec":45.2803},{"name":"レグルス","en":"Regulus","mag":1.36,"ra":152.093,"dec":11.9672},{"name":"アダラ","en":"Adhara","mag":1.5,"ra":104.6565,"dec":-28.9721}];
+if (typeof module !== 'undefined') module.exports = { BRIGHT_STARS };
