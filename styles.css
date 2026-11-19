@@ -2,11 +2,20 @@
   --ink: #1c1c1e; --dim: #6b6b70; --line: #d9d9de; --paper: #fff; --accent: #b56a00;
   --sun: #b45309; --moon: #1d4ed8; --astro: #6d28d9;
   --result-bg: #f4f4f6;
+  color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
   :root { --ink: #e8e8ea; --dim: #9a9aa0; --line: #3a3a3e; --paper: #141416; --accent: #ffcf5c;
     --sun: #fbbf24; --moon: #60a5fa; --astro: #a78bfa; --result-bg: #1e1e20; }
 }
+/* 赤色テーマ（夜間の天体観測用・暗順応を保つ赤中心）: 黒地に赤系のみ */
+:root[data-theme="red"] {
+  --ink: #ffd7d7; --dim: #d98c8c; --line: #5f1f1f; --paper: #0f0202; --accent: #ff4d4d;
+  --sun: #ff8a66; --moon: #ffb3b3; --astro: #ff6b6b; --result-bg: #1c0606;
+  color-scheme: dark;
+}
+:root[data-theme="red"] input, :root[data-theme="red"] button,
+:root[data-theme="red"] .help-dialog { background: var(--paper); color: var(--ink); border-color: var(--line); }
 * { box-sizing: border-box; }
 body {
   margin: 0 auto; max-width: 760px; padding: 16px 16px 48px;
@@ -15,12 +24,14 @@ body {
 }
 .top { display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
 .top h1 { font-size: 20px; margin: 0; font-weight: 650; }
+#themeToggle { margin-left: auto; flex: 0 0 auto; font-size: 13px; padding: 5px 10px; color: var(--dim); }
+#themeToggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); font-weight: 650; }
 .offline-note { margin: 12px 0 0; }
 .note { color: var(--dim); font-size: 13px; }
 /* ---------- ゾーン: 入力と結果の分離 ---------- */
 /* ボックス化しない。本文と同じ地・罫線だけ。区分は見出しの太い下罫で作る。 */
 .zone { margin-top: 32px; }
-.zone > h2 { font-size: 15px; margin: 0 0 4px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-weight: 700; }
+.zone > h2 { font-size: 15px; margin: 0 0 4px; padding-bottom: 6px; border-bottom: 3px solid var(--accent); font-weight: 700; }
 .zone-input > section { margin-top: 20px; }
 .zone-input h3, .zone-result h3 { font-size: 16px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 650; }
 .zone-result > section { margin-top: 24px; }

@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>try{if(localStorage.getItem('skypwa-theme')==='red')document.documentElement.dataset.theme='red';}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>@import url("styles.css");</style>
@@ -16,6 +17,7 @@
 <body>
 <header class="top">
   <h1>koyomi-naut</h1>
+  <button id="themeToggle" type="button" aria-pressed="false">赤色テーマ</button>
 </header>
 
 <main>
@@ -25,7 +27,7 @@
   <section class="zone zone-input" aria-labelledby="h-input">
     <h2 id="h-input">入力</h2>
   <section aria-labelledby="h-place">
-    <h3 id="h-place">1. 場所</h3>
+    <h3 id="h-place">場所</h3>
     <p class="note">場所の指定方法を1つ選んでください。</p>
     <div class="place-tabs" role="tablist" aria-label="場所の指定方法">
       <button type="button" role="tab" id="tab-muni" aria-controls="panel-muni" aria-selected="true" data-panel="panel-muni">市町村から探す</button>
@@ -61,7 +63,7 @@
   </section>
 
   <section aria-labelledby="h-date">
-    <h3 id="h-date">2. 日付</h3>
+    <h3 id="h-date">日付</h3>
     <div class="row">
       <input id="dateInput" type="date" aria-label="日付">
       <button id="todayBtn" type="button">今日</button>
@@ -85,7 +87,7 @@
     </div>
 
   <section aria-labelledby="h-events">
-    <h3 id="h-events">3. 出没・薄明</h3>
+    <h3 id="h-events">出没・薄明</h3>
     <div id="timeline" class="timeline" aria-label="指定日00:00から翌日日の出までの出没・薄明タイムライン"></div>
     <dl class="event-details">
       <div><dt>太陽最大高度</dt><dd id="evSunMax">—</dd></div>
@@ -103,7 +105,7 @@
   </section>
 
   <section aria-labelledby="h-traj">
-    <h3 id="h-traj">4. 太陽と月の軌道</h3>
+    <h3 id="h-traj">太陽と月の軌道</h3>
     <canvas id="traj" height="360" aria-label="太陽と月の軌道図"></canvas>
   </section>
   </section><!-- /結果ゾーン -->

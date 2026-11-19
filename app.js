@@ -4,6 +4,21 @@
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '' };
+const isRedTheme = () => document.documentElement.dataset.theme === 'red';
+const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
+
+const THEME_KEY = 'skypwa-theme';
+function applyTheme(red) {
+  document.documentElement.dataset.theme = red ? 'red' : '';
+  const toggle = $('themeToggle');
+  if (toggle) {
+    toggle.setAttribute('aria-pressed', red ? 'true' : 'false');
+    toggle.textContent = red ? '通常テーマ' : '赤色テーマ';
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = red ? '#0f0202' : '#0b1020';
+  try { localStorage.setItem(THEME_KEY, red ? 'red' : 'default'); } catch (e) {}
+}
 
 function todayStr() {
   const d = new Date();
@@ -124,15 +139,15 @@ function drawMoonPhase(age) {
   if (!cv) return;
   const ctx = cv.getContext('2d');
   const S = 120, cx = S / 2, cy = S / 2, r = 52;
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const red = isRedTheme();
   ctx.clearRect(0, 0, S, S);
   // 暗部
-  ctx.fillStyle = dark ? '#3a3f4a' : '#c9ccd4';
+  ctx.fillStyle = red ? '#3a0d0d' : (isDarkPair() ? '#3a3f4a' : '#c9ccd4');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   // 照部: 行ごとに終端楕円の内側を塗る
   const k = Math.cos(2 * Math.PI * age / SYNODIC);
   const waxing = age < SYNODIC / 2;
-  ctx.fillStyle = dark ? '#f2ead0' : '#e8d98a';
+  ctx.fillStyle = red ? '#ffb3b3' : (isDarkPair() ? '#f2ead0' : '#e8d98a');
   for (let y = -r; y <= r; y++) {
     const hw = Math.sqrt(Math.max(0, r * r - y * y));
     let x0, x1;
@@ -140,7 +155,7 @@ function drawMoonPhase(age) {
     else { x0 = cx - hw; x1 = cx - k * hw; }
     if (x1 > x0) ctx.fillRect(x0, cy + y, x1 - x0, 1);
   }
-  ctx.strokeStyle = dark ? '#8a8f9a' : '#9a9da6';
+  ctx.strokeStyle = red ? '#d98c8c' : (isDarkPair() ? '#8a8f9a' : '#9a9da6');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 }
 
@@ -150,8 +165,8 @@ function drawTrajectory(lat, lon, date) {
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const W = cv.clientWidth || 720, H = cv.clientHeight || 360;
   cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const ink = dark ? '#d8d8d8' : '#222', dim = dark ? '#666' : '#999', grid = dark ? '#333' : '#ddd';
+  const red = isRedTheme();
+  const ink = red ? '#ffd7d7' : (isDarkPair() ? '#d8d8d8' : '#222'), dim = red ? '#b05a5a' : (isDarkPair() ? '#666' : '#999'), grid = red ? '#4a1515' : (isDarkPair() ? '#333' : '#ddd');
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = ink; ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.font = '11px system-ui, sans-serif';
   const padL = 34, padR = 10, padT = 14, padB = 26;
@@ -184,8 +199,8 @@ function drawTrajectory(lat, lon, date) {
     }
     ctx.stroke(); ctx.setLineDash([]);
   }
-  path(sun, dark ? '#ffd54d' : '#c49000', 2);
-  path(moon, dark ? '#b8c7e0' : '#4a6fa5', 1.6, [5, 3]);
+  path(sun, red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'), 2);
+  path(moon, red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'), 1.6, [5, 3]);
   // 時刻ティック (3時間ごと)
   ctx.fillStyle = ink;
   for (const p of sun) {
@@ -201,6 +216,12 @@ function drawTrajectory(lat, lon, date) {
 /* ---------- イベント ---------- */
 function init() {
   load();
+  // 赤色テーマを復元（head の小スクリプトで先行適用済み、ボタン状態の同期用）
+  let saved = 'default';
+  try { saved = localStorage.getItem(THEME_KEY) || 'default'; } catch (e) {}
+  applyTheme(saved === 'red');
+  const toggle = $('themeToggle');
+  if (toggle) toggle.addEventListener('click', () => { applyTheme(!isRedTheme()); render(); });
   state.date = state.date || todayStr();
   $('dateInput').value = state.date;
   $('latInput').value = state.lat.toFixed(4);
