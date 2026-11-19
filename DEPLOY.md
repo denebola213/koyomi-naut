@@ -56,7 +56,7 @@ squash merge する**。マージした `main` だけが本番デプロイの対
 
 6. **本番確認**
 
-   - マージで `main` が進み、本番デプロイ（`koyomi-naut.pages.dev`）が自動発行される。
+   - マージで `main` が進み、本番デプロイ（`https://koyomi-naut.st-albireo.net/`）が自動発行される。
    - エージェントは Deployments API で success を確認し、
      本番 HTML / `sw.js`（新しい `skypwa-vN`）を `curl` で確認する。
      `git push` / merge の成功だけでは本番反映を証明できない。

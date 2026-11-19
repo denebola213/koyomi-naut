@@ -74,7 +74,7 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 - PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
   （`preview_deployment_setting = "all"`）。プレビュー URL を確認し、
   ユーザーの OK が出た場合のみ squash merge する（先行マージ禁止）。
-- マージで `main` が進むと本番（`koyomi-naut.pages.dev`）が自動デプロイされる。
+- マージで `main` が進むと本番（`https://koyomi-naut.st-albireo.net/`）が自動デプロイされる。
   マージ成功だけでなく本番 URL / `sw.js` の新バージョンを `curl` で確認する。
 - リポジトリは squash merge のみ可（merge commit / rebase は不可）。
 
