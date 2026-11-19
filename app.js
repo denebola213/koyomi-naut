@@ -95,15 +95,18 @@ function renderTimeline(ev, fmtAstro) {
   for (const i of items) {
     const row = document.createElement('div');
     row.className = 'timeline-item';
-    const dot = document.createElement('span');
-    dot.className = `timeline-dot ${i.cls}`;
+    const icon = document.createElement('span');
+    icon.className = `timeline-icon ${i.cls}`;
+    // 出没は ↑↓、南中は ●、薄明は空欄。色（sun/moon）は cls で付ける。
+    icon.textContent = i.kind === 'rise' ? '↑' : i.kind === 'set' ? '↓' : i.kind === 'transit' ? '●' : '';
+    icon.setAttribute('aria-hidden', 'true');
     const time = document.createElement('span');
     time.className = 'timeline-time';
     time.textContent = fmtAstro(i.time);
     const label = document.createElement('span');
     label.className = 'timeline-label';
     label.textContent = i.label;
-    row.append(dot, time, label);
+    row.append(icon, time, label);
     el.appendChild(row);
   }
 }

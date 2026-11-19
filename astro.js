@@ -115,7 +115,7 @@ function dayEvents(lat, lon, dateStr) {
   const inWindow = t => t >= dayStart && t <= windowEnd;
   const windowEvents = [];
   const push = (hits, risingLabel, settingLabel, cls) => {
-    for (const h of hits) if (inWindow(h.time)) windowEvents.push({ time: h.time, label: h.rising ? risingLabel : settingLabel, cls });
+    for (const h of hits) if (inWindow(h.time)) windowEvents.push({ time: h.time, label: h.rising ? risingLabel : settingLabel, cls, kind: cls === 'astro' ? 'astro' : (h.rising ? 'rise' : 'set') });
   };
   push(sHits, '日の出', '日の入り', 'sun');
   push(astroHits, '天文薄明終了', '天文薄明開始', 'astro');
@@ -141,8 +141,8 @@ function dayEvents(lat, lon, dateStr) {
     }
     return out;
   };
-  for (const t of findTransits('sun')) windowEvents.push({ time: t, label: '太陽の南中', cls: 'sun' });
-  for (const t of findTransits('moon')) windowEvents.push({ time: t, label: '月の南中', cls: 'moon' });
+  for (const t of findTransits('sun')) windowEvents.push({ time: t, label: '太陽の南中', cls: 'sun', kind: 'transit' });
+  for (const t of findTransits('moon')) windowEvents.push({ time: t, label: '月の南中', cls: 'moon', kind: 'transit' });
   windowEvents.sort((a, b) => a.time - b.time);
 
   const rise = sHits.find(h => h.rising && h.time < nextDayStart) || null;
