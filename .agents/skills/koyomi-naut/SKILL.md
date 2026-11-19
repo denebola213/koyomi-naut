@@ -1,7 +1,7 @@
 ---
 name: koyomi-naut
 description: koyomi-naut の実装ルールを確認する。通信・表示・デプロイ方針。
-version: 0.3.0
+version: 0.5.0
 author: denebola213, Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -14,13 +14,15 @@ metadata:
 # koyomi-naut 開発ルール
 
 koyomi-naut への実装・修正を行うときの共通ルール。`AGENTS.md` の要点を
-skill としてまとめたもの。
+skill としてまとめたもの。本体は常時必要な不変条件だけを持ち、テーマ別の
+詳細は `references/` に置く（該当するときだけ読む）。
 
 ## Overview
 
 計算（太陽・月の位置、出没・薄明・南中、月齢・四大相・遠近）はすべて端末内
 （`astro.js` の Meeus 低精度式）で行う。第三者への通信・データ送信はしない。
-静的サイトでビルドなし、Cloudflare Pages に `main` push で自動デプロイする。
+静的サイトでビルドなし。開発は **branch → PR → Cloudflare Pages プレビュー →
+squash merge → `main` 本番デプロイ**（`main` 直接 push 禁止、手順は `DEPLOY.md`）。
 
 ## When to Use
 
@@ -60,14 +62,27 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 
 ## キャッシュ・SW
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v13）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v21）。
 - `/sw.js` と静的アセットは `_headers` で no-cache 設定済み。
 - SW の責務はオフライン互換（ネットワーク優先・失敗時はキャッシュ）のみで、
   第三者へのデータ送信はしない。
 
+## 開発ワークフロー（branch → PR → プレビュー → merge）
+
+- `main` への直接 push は禁止（ブランチ保護: PR 必須）。作業は `<type>/<short-desc>`
+  ブランチで行い、PR を作る。詳細は `DEPLOY.md`。
+- PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
+  （`preview_deployment_setting = "all"`）。プレビュー URL を確認し、
+  ユーザーの OK が出た場合のみ squash merge する（先行マージ禁止）。
+- マージで `main` が進むと本番（`koyomi-naut.pages.dev`）が自動デプロイされる。
+  マージ成功だけでなく本番 URL / `sw.js` の新バージョンを `curl` で確認する。
+- リポジトリは squash merge のみ可（merge commit / rebase は不可）。
+
 ## 検証
 
 - `node --check app.js astro.js`
+- `scripts/verify-dom.py` で ID 一致とゾーン漏れをチェックする
+  （JS が参照する ID が HTML に存在するか、入力／結果ゾーンへの漏れがないか）。
 - Node で数値テスト: `require('./astro.js')`（`module.exports` あり）。
 - 四大相のラベルは月齢ではなく黄経差の交差時刻で判定する。
 
@@ -76,3 +91,13 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 - 「表示だけ増やす」つもりでも、事実間違えたラベル・表記（例: 「（満ちる）」等）を
   持ち込まない。不要な中間名は廃止済み。
 - 離角（`elong`）では上弦と下弦を区別できない（90° と 270°）。黄経差（0〜360°）で判定する。
+- `node --check` が共有ライブラリ読み込みエラーで失敗したら、まず別の node バイナリを
+  探して再実行する（`which -a node`）— ファイルの構文エラーと切り分けてから直す。
+
+## 詳細は references を参照（該当するときだけ読む）
+
+| テーマ | 参照 | こんなときに読む |
+|---|---|---|
+| UI 構造（入力／結果ゾーン・見た目の原則） | `references/ui-structure.md` | 画面構造・罫線・色付けを変更するとき |
+| タイムラインのアイコン（時刻の左） | `references/timeline-icon.md` | イベント種別の字形・色・コントラストを変更するとき |
+| 赤色テーマ（夜間の天体観測用） | `references/red-theme.md` | `data-theme="red"` のパレット・Canvas・切替 UI を変更するとき |

@@ -52,9 +52,11 @@
 
 ### キャッシュ・デプロイ
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v13 現在）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v21 現在）。
 - Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
-- デプロイは Cloudflare Pages に `main` push で自動発行（Git 連携）。
+- デプロイは Cloudflare Pages（Git 連携）。`main` への直接 push は禁止——
+  **branch → PR → プレビュー URL で確認 → ユーザー OK → squash merge → 本番**。
+  手順の詳細は `DEPLOY.md`。`main` はブランチ保護（PR 必須・承認数 0・直接 push 禁止）。
 - ローカル確認: `python3 -m http.server 8000`。
 
 ### タイムライン追加
@@ -62,6 +64,17 @@
 - `dayEvents()` の `windowEvents` に `{ time, label, cls }` を追加し、時刻順ソート。
   既存の `renderTimeline()` が描画。
 - 新時刻（2回あり得る場合は2行表示、例: 月の南中は 24.8h 周期で窓長により 1〜2 回）。
+
+## 開発ワークフロー
+
+- 作業は `<type>/<short-desc>` ブランチ（例: `feat/...`, `fix/...`, `docs/...`）で行い、PR を作る。
+- PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
+  （`preview_deployment_setting = "all"`、URL は PR コメントにも貼られる）。
+- **マージはユーザーの OK が出た場合のみ**実行する（先行マージ禁止）。
+  リポジトリは squash merge のみ可（`gh pr merge <n> --squash --delete-branch`）。
+- マージで `main` が進むと本番デプロイが自動発行される。push / merge 成功だけでなく
+  本番 URL と `sw.js` の新バージョンを `curl` で確認する。
+- 手順の正本は `DEPLOY.md`。
 
 ## 検証
 
@@ -72,4 +85,4 @@
 ## 参照
 
 - 本番: https://koyomi-naut.pages.dev
-- リポジトリ: https://github.com/denebola213/koyomi-naut（main push で自動デプロイ）
+- リポジトリ: https://github.com/denebola213/koyomi-naut（PR 経由で本番公開。`main` 直接 push 禁止）

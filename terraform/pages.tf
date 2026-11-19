@@ -1,6 +1,9 @@
 # Cloudflare Pages プロジェクト定義（koyomi-naut）
 #
-# main への push で自動デプロイされる Git 連携 Pages プロジェクトです。
+# Git 連携 Pages プロジェクトです。開発ワークフローは
+# branch → PR → プレビュー（全ブランチ）→ squash merge → main 本番デプロイ
+# （手順は DEPLOY.md）。下記の設定により、main 以外のブランチ push / PR ごとに
+# プレビュー専用デプロイが自動発行され、PR にプレビュー URL がコメントされます。
 # 事前に必要なもの:
 #   1. Cloudflare ダッシュボードで GitHub 連携を有効化する
 #      （Pages → Settings → GitHub integration で GitHub を接続。
