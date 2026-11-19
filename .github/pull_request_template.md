@@ -8,7 +8,8 @@
 
 ## 検証
 
-- [ ] `node --check app.js astro.js`
+- [ ] `npm run check`
+- [ ] `npm test`（GitHub Actions でも自動実行）
 - [ ] 表示・計算に触れる場合は `require('./astro.js')` で数値確認
 - [ ] `sw.js` の `CACHE = 'skypwa-vN'` を上げた（全変更で必須）
 - [ ] プレビュー URL で見た目・動作を確認した

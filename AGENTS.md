@@ -79,7 +79,9 @@
 
 ## 検証
 
-- `node --check app.js astro.js`
+- `npm run check`（`node --check` 群）
+- `npm test`（`node --test`、依存ゼロ。CI で自動実行。詳細は `.agents/skills/koyomi-naut/references/testing.md`）
+- `npm run verify-dom`（`scripts/verify-dom.py`）
 - Node での数値テストは `require('./astro.js')`（`module.exports` あり）。
 - ラベル表示（四大相）は月齢±0.5 日ではなく黄経差の交差時刻で判定。
 

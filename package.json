@@ -1,0 +1,15 @@
+{
+  "name": "koyomi-naut",
+  "private": true,
+  "version": "1.0.0",
+  "description": "日の出・日の入り・月の出・月の入り・天文薄明・南中と太陽と月の軌道を表示するオフライン対応 PWA",
+  "scripts": {
+    "check": "node --check app.js && node --check astro.js && node --check planets.js && node --check sw.js && node --check municipalities.js",
+    "test": "node --test",
+    "verify-dom": "python3 scripts/verify-dom.py"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}

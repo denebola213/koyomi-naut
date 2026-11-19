@@ -1,0 +1,29 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # dayEvents 等はローカル時刻で走査するため、期待値は JST 基準で固定する
+  TZ: Asia/Tokyo
+
+jobs:
+  unit:
+    name: 単体テスト + DOM検証
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: 構文チェック
+        run: npm run check
+      - name: 単体テスト (依存ゼロ / node:test)
+        run: npm test
+      - name: DOM検証
+        run: npm run verify-dom

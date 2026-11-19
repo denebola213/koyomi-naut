@@ -80,8 +80,9 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 
 ## 検証
 
-- `node --check app.js astro.js`
-- `scripts/verify-dom.py` で ID 一致とゾーン漏れをチェックする
+- `npm run check`（`node --check` 群）
+- `npm test`（`node --test`、依存ゼロ）
+- `npm run verify-dom`（`scripts/verify-dom.py`）で ID 一致とゾーン漏れをチェックする
   （JS が参照する ID が HTML に存在するか、入力／結果ゾーンへの漏れがないか）。
 - Node で数値テスト: `require('./astro.js')`（`module.exports` あり）。
 - 四大相のラベルは月齢ではなく黄経差の交差時刻で判定する。
@@ -99,5 +100,6 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 | テーマ | 参照 | こんなときに読む |
 |---|---|---|
 | UI 構造（入力／結果ゾーン・見た目の原則） | `references/ui-structure.md` | 画面構造・罫線・色付けを変更するとき |
+| テスト（単体テストとCI） | `references/testing.md` | テストを追加・変更するとき |
 | タイムラインのアイコン（時刻の左） | `references/timeline-icon.md` | イベント種別の字形・色・コントラストを変更するとき |
 | 赤色テーマ（夜間の天体観測用） | `references/red-theme.md` | `data-theme="red"` のパレット・Canvas・切替 UI を変更するとき |
