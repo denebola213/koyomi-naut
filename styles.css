@@ -69,14 +69,13 @@ input[type="time"] { min-width: 130px; }
 .results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .results .result { display: block; width: 100%; text-align: left; }
 
-/* ---------- 確定した条件（結果ゾーン先頭） ---------- */
-.confirmed { margin: 12px 0 4px; }
-.confirmed-label { margin: 0 0 4px; font-weight: 650; font-size: 14px; }
-.confirmed-list { margin: 10px 0 0; border: 1px solid var(--line); background: var(--paper); }
-.confirmed-list > div { display: flex; gap: 16px; padding: 8px 12px; }
-.confirmed-list > div + div { border-top: 1px solid var(--line); }
-.confirmed-list dt { width: 3.5em; color: var(--dim); flex: 0 0 auto; }
-.confirmed-list dd { margin: 0; font-size: 17px; font-variant-numeric: tabular-nums; }
+/* ---------- 確定した条件（結果ゾーン先頭）: 横並びでコンパクト ---------- */
+.confirmed { margin: 8px 0 4px; }
+.confirmed-list { margin: 0; border: 1px solid var(--line); background: var(--paper);
+  display: flex; flex-wrap: wrap; gap: 5px 20px; padding: 7px 12px; }
+.confirmed-list > div { display: inline-flex; gap: 6px; align-items: baseline; }
+.confirmed-list dt { color: var(--dim); flex: 0 0 auto; }
+.confirmed-list dd { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
 .dim { color: var(--dim); font-size: 13px; }
 .help-btn {
   display: inline-flex; align-items: center; justify-content: center;
