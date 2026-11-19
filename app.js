@@ -555,7 +555,7 @@ function drawSkyChart(lat, lon, when) {
   }
   ctx.fillStyle = dim;
   const belowTxt = below.length ? `${below.join('・')}は地平線下` : '太陽・月・惑星はすべて地平線上';
-  ctx.fillText(`${fmtSkyWhen(when)}・${belowTxt}`, 10, H - 10);
+  ctx.fillText(belowTxt, 10, H - 10);
 }
 
 /* ---------- イベント ---------- */
