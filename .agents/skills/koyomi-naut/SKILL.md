@@ -62,7 +62,7 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 
 ## キャッシュ・SW
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v21）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v48）。
 - `/sw.js` と静的アセットは `_headers` で no-cache 設定済み。
 - SW の責務はオフライン互換（ネットワーク優先・失敗時はキャッシュ）のみで、
   第三者へのデータ送信はしない。
@@ -73,6 +73,9 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
   ブランチで行い、PR を作る。詳細は `DEPLOY.md`。
 - PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
   （`preview_deployment_setting = "all"`）。プレビュー URL を確認し、
+  **PR 本文の「ステージURL」に貼る**（PR 作成直後は未発行のため、デプロイ成功と
+  200 を確認した後に `gh pr edit <番号> --body-file <本文>` で本文を更新して記入し、
+  `gh pr view` で確認する。手順は `DEPLOY.md`）。
   ユーザーの OK が出た場合のみ squash merge する（先行マージ禁止）。
 - マージで `main` が進むと本番（`https://koyomi-naut.st-albireo.net/`）が自動デプロイされる。
   マージ成功だけでなく本番 URL / `sw.js` の新バージョンを `curl` で確認する。
