@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', time: '21:00', view: 'events', showPlanets: true, showConstellations: true };
+const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true };
 const isRedTheme = () => document.documentElement.dataset.theme === 'red';
 const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -36,14 +36,19 @@ function setPlace(lat, lon, label) {
   render();
 }
 function save() {
-  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, time: state.time, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations })); } catch (e) {}
+  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations })); } catch (e) {}
 }
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem('skypwa-v1') || 'null');
     if (s && typeof s.lat === 'number') {
       state.lat = s.lat; state.lon = s.lon; state.place = s.place || ''; state.date = s.date || '';
-      if (typeof s.time === 'string' && s.time) state.time = s.time;
+      if (typeof s.skyOffsetMin === 'number') state.skyOffsetMin = Math.max(-1080, Math.min(1080, s.skyOffsetMin));
+      else if (typeof s.time === 'string' && /^\d{2}:\d{2}$/.test(s.time)) {
+        // 旧形式（時刻文字列 21:00 等）からの移行: 指定日18時からのオフセットに変換
+        const off = (Number(s.time.slice(0, 2)) * 60 + Number(s.time.slice(3))) - 1080;
+        if (off >= -1080 && off <= 1080) state.skyOffsetMin = off;
+      }
       if (s.view === 'sky' || s.view === 'events') state.view = s.view;
       if (typeof s.showPlanets === 'boolean') state.showPlanets = s.showPlanets;
       if (typeof s.showConstellations === 'boolean') state.showConstellations = s.showConstellations;
@@ -109,8 +114,23 @@ function searchPlaces(rawQ) {
 }
 
 /* ---------- 描画 ---------- */
+// 全天図の参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
+function skyWhen() {
+  const base = new Date(`${state.date}T18:00:00`);
+  base.setMinutes(base.getMinutes() + (state.skyOffsetMin || 0));
+  return base;
+}
+function fmtSkyWhen(w) {
+  const wd = ['日', '月', '火', '水', '木', '金', '土'][w.getDay()];
+  return `${w.getFullYear()}-${String(w.getMonth() + 1).padStart(2, '0')}-${String(w.getDate()).padStart(2, '0')} ${String(w.getHours()).padStart(2, '0')}:${String(w.getMinutes()).padStart(2, '0')}（${wd}）`;
+}
+function updateTimeLabels() {
+  const label = fmtSkyWhen(skyWhen());
+  setText('timeLabel', label);
+  setText('skyTimeLabel', label);
+}
 function render() {
-  const { lat, lon, date, time } = state;
+  const { lat, lon, date } = state;
   $('dmsLat').textContent = toDMS(lat, 'N', 'S');
   $('dmsLon').textContent = toDMS(lon, 'E', 'W');
   $('decLat').textContent = `(${lat.toFixed(4)}°)`;
@@ -118,7 +138,7 @@ function render() {
   // 確定した日付（結果ゾーン）: YYYY-MM-DD（曜）
   const wd = ['日', '月', '火', '水', '木', '金', '土'][new Date(date + 'T12:00:00').getDay()];
   setText('dateLabel', `${date}（${wd}）`);
-  setText('timeLabel', `${date} ${time || '21:00'}（${wd}）`);
+  updateTimeLabels();
 
   const ev = dayEvents(lat, lon, date);
   const fmtDur = min => min == null ? '—' : `${Math.floor(min / 60)}時間${Math.round(min % 60)}分`;
@@ -144,7 +164,7 @@ function render() {
   setText('moonInfo', `照度 ${(m.illum * 100).toFixed(0)}%・距離 ${Math.round(m.dist)} km・遠近 ${distanceRatioPct(m.dist)}%`);
 
   // 見えているパネルだけ描画（hidden 中の canvas は clientWidth=0）
-  if (state.view === 'sky') drawSkyChart(lat, lon, date, time);
+  if (state.view === 'sky') drawSkyChart(lat, lon, skyWhen());
   else drawTrajectory(lat, lon, date);
 }
 
@@ -269,12 +289,10 @@ function drawTrajectory(lat, lon, date) {
  * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は既存 astro.js の sunAltAz/moonAltAz を使用。惑星・星座は後続PR。 */
-function drawSkyChart(lat, lon, date, time) {
+function drawSkyChart(lat, lon, when) {
   const cv = $('skyChart');
   if (!cv) return;
-  const t = time && /^\d{2}:\d{2}$/.test(time) ? time : '21:00';
-  const when = new Date(`${date}T${t}:00`);
-  if (isNaN(when)) return;
+  if (!(when instanceof Date) || isNaN(when)) return;
   const ctx = cv.getContext('2d');
   const dpr = Math.min(2, window.devicePixelRatio || 1);
   const W = cv.clientWidth || 720, H = cv.clientHeight || 420;
@@ -312,7 +330,7 @@ function drawSkyChart(lat, lon, date, time) {
   body('太陽', sunAltAz(when, lat, lon), red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'));
   body('月', moonAltAz(when, lat, lon), red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'));
   ctx.fillStyle = dim;
-  ctx.fillText(`${date} ${t}・惑星/星座は準備中（モック）`, 10, H - 10);
+  ctx.fillText(`${fmtSkyWhen(when)}・惑星/星座は準備中（モック）`, 10, H - 10);
 }
 
 /* ---------- イベント ---------- */
@@ -425,10 +443,16 @@ function init() {
   });
   $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); save(); render(); });
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
-  $('timeInput').value = state.time || '21:00';
   $('planetToggle').checked = state.showPlanets;
   $('constellationToggle').checked = state.showConstellations;
-  $('timeInput').addEventListener('change', e => { state.time = e.target.value || '21:00'; save(); render(); });
+  // 全天図の時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
+  $('timeSlider').value = state.skyOffsetMin;
+  $('timeSlider').addEventListener('input', e => {
+    state.skyOffsetMin = Number(e.target.value) || 0;
+    save();
+    updateTimeLabels();
+    if (state.view === 'sky') drawSkyChart(state.lat, state.lon, skyWhen());
+  });
   $('planetToggle').addEventListener('change', e => { state.showPlanets = e.target.checked; save(); render(); });
   $('constellationToggle').addEventListener('change', e => { state.showConstellations = e.target.checked; save(); render(); });
 
@@ -447,7 +471,7 @@ function init() {
   }
 
   window.addEventListener('resize', () => {
-    if (state.view === 'sky') drawSkyChart(state.lat, state.lon, state.date, state.time);
+    if (state.view === 'sky') drawSkyChart(state.lat, state.lon, skyWhen());
     else drawTrajectory(state.lat, state.lon, state.date);
   });
   render();

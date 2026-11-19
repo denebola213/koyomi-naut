@@ -28,13 +28,14 @@ def zone(name):
     return rest[:cut]
 
 inp, res = zone('zone-input'), zone('zone-result')
-result_ids = ['placeLabel', 'dmsLat', 'dmsLon', 'decLat', 'decLon', 'dateLabel', 'timeLabel', 'timeline', 'skyChart']
+result_ids = ['placeLabel', 'dmsLat', 'dmsLon', 'decLat', 'decLon', 'dateLabel', 'timeLabel', 'skyTimeLabel', 'timeline', 'skyChart']
 leaked = [i for i in result_ids if f'id="{i}"' in inp]
 if leaked:
     problems.append(f'入力ゾーンに結果idが漏れている: {leaked}')
 # 結果ゾーンの入力控件（? ダイアログ起動ボタン moonHelpBtn とタブ切替ボタンは除外）
+# 全天図の時刻スライダー timeSlider は結果ゾーン内の例外（全天図パネルに近接させる指示のため許可）
 ctrl = [i for kind, i in re.findall(r'<(input|button)[^>]*id="([^"]+)"', res)
-        if i not in ('moonHelpBtn', 'tab-events', 'tab-sky')]
+        if i not in ('moonHelpBtn', 'tab-events', 'tab-sky', 'timeSlider')]
 if ctrl:
     problems.append(f'結果ゾーンに入力控件が漏れている: {ctrl}')
 
