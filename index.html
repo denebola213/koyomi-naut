@@ -123,7 +123,10 @@
         <h3 id="h-sky">空のようす <button type="button" class="help-btn" id="skyHelpBtn" aria-haspopup="dialog" aria-label="空のようすの説明">?</button></h3>
         <canvas id="skyChart" height="420" aria-label="空のようす（天頂を中心にした円盤）"></canvas>
         <div class="sky-time">
-          <label for="timeSlider">時刻 <span id="skyTimeLabel">—</span></label>
+          <div class="sky-time-head">
+            <label for="timeSlider">時刻 <span id="skyTimeLabel">—</span></label>
+            <button id="nowBtn" type="button">現在</button>
+          </div>
           <input id="timeSlider" type="range" min="-1080" max="1080" step="5" value="180"
                  aria-label="空のようすの時刻（指定日18時からプラスマイナス18時間）">
           <div class="sky-time-range" aria-hidden="true"><span>前日 00:00</span><span>指定日 18:00</span><span>翌日 12:00</span></div>
@@ -159,7 +162,7 @@
 <dialog id="skyHelpDialog" class="help-dialog" aria-labelledby="skyHelpTitle">
   <h2 id="skyHelpTitle">空のようすについて</h2>
   <p>中央が天頂（頭の真上）、外周が地平線の円盤です。北を上・東を左に置いています——画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるためです。円内の同心円は高度30°・60°を示します。</p>
-  <p>時刻スライダーは指定日18時を中心に前後18時間（前日00:00〜翌日12:00、5分刻み）を動かせます。太陽・月は点とラベル、惑星（水星〜土星）も点とラベルで示します。地平線下の天体は下部にまとめて表示します。</p>
+  <p>時刻スライダーは指定日18時を中心に前後18時間（前日00:00〜翌日12:00、5分刻み）を動かせます。起動時は現在時刻が初期値となり、「現在」ボタンでいつでも現在時刻（日付は今日）に戻れます。太陽・月は点とラベル、惑星（水星〜土星）も点とラベルで示します。地平線下の天体は下部にまとめて表示します。</p>
   <p>一等星は視等級1.5以下の22星で、惑星より小さい点です。表示時は名前も一緒に出ます。星座は88星座の結び（線のみ）で、星座名はその中心付近に表示します。黄道は線、天の川は外側輪郭で塗ります。</p>
   <p>表示の切替はすべて「表示」行で行い、選択は保存されます。計算は端末内で完結し、通信しません。</p>
   <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>

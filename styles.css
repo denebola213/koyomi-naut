@@ -132,7 +132,9 @@ canvas#skyChart { width: 100%; height: auto; aspect-ratio: 1 / 1; border: 0; bor
 #panel-sky .sky-time, #panel-sky .sky-display, #panel-sky > section > p.note { margin-left: 12px; margin-right: 12px; }
 #panel-sky .sky-time { margin-top: 8px; }
 .sky-time { margin-top: 12px; }
-.sky-time > label { display: block; font-weight: 650; margin-bottom: 6px; }
+.sky-time-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.sky-time-head > label { display: block; font-weight: 650; }
+#nowBtn { flex: 0 0 auto; font-size: 13px; padding: 5px 12px; }
 .sky-time input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
 .sky-time-range { display: flex; justify-content: space-between; color: var(--dim); font-size: 12px; margin-top: 2px; }
 .sky-display { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
