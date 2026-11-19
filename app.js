@@ -45,18 +45,61 @@ function load() {
   } catch (e) {}
 }
 
-/* 市町村検索 (前方一致 + 部分一致、漢字/かな) */
-function searchMunicipalities(q) {
-  q = q.trim();
+/* 地名検索: 市町村 + 大字・町丁目＋小字（字）。漢字/かな両対応。
+ * oaza.js は重い（約28万件）ため、タブを開いた時に遅延ロードする。
+ * Service Worker のプリキャッシュにより初回オンライン後はオフライン可。 */
+let oazaState = 'idle'; // idle | loading | ready | error
+let oazaWaiters = [];
+function ensureOaza() {
+  if (oazaState === 'ready' || oazaState === 'loading') return;
+  oazaState = 'loading';
+  const s = document.createElement('script');
+  s.src = 'oaza.js';
+  s.onload = () => {
+    oazaState = 'ready';
+    for (const cb of oazaWaiters) cb();
+    oazaWaiters = [];
+  };
+  s.onerror = () => {
+    oazaState = 'error';
+    oazaWaiters = [];
+  };
+  document.head.appendChild(s);
+}
+function onOazaReady(cb) {
+  if (oazaState === 'ready') cb();
+  else if (oazaState === 'loading') oazaWaiters.push(cb);
+  else { ensureOaza(); oazaWaiters.push(cb); }
+}
+
+function searchPlaces(rawQ) {
+  const q = rawQ.trim();
   if (!q) return [];
-  const starts = [], contains = [];
+  // カナ照合用: カタカナ入力をひらがなに正規化（地名中の「ケ」等の漢字照合は元の q を使う）
+  const qK = q.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+  const buckets = [[], [], []];
+  const push = (bucket, item) => { if (buckets[bucket].length < 30) buckets[bucket].push(item); };
+  const classify = (name, kana, full, fullK) => {
+    if (name.startsWith(q) || kana.startsWith(qK)) return 0;
+    if (full.startsWith(q) || fullK.startsWith(qK)) return 1;
+    if (full.includes(q) || fullK.includes(qK)) return 2;
+    return -1;
+  };
   for (const [pref, city, kana, lat, lon] of MUNICIPALITIES) {
     const full = pref + ' ' + city, fullK = pref + ' ' + kana;
-    if (full.startsWith(q) || fullK.startsWith(q)) starts.push({ pref, city, kana, lat, lon });
-    else if (full.includes(q) || fullK.includes(q)) contains.push({ pref, city, kana, lat, lon });
-    if (starts.length + contains.length >= 30) break;
+    const b = classify(city, kana, full, fullK);
+    if (b >= 0) push(b, { label: `${pref} ${city}`, sub: kana, lat, lon });
   }
-  return starts.concat(contains).slice(0, 30);
+  if (typeof OAZA !== 'undefined' && typeof OAZA_CITIES !== 'undefined') {
+    for (const [ci, oaza, kana, koaza, lat, lon] of OAZA) {
+      const [pref, city, cityKana] = OAZA_CITIES[ci];
+      const rest = oaza + (koaza ? ' ' + koaza : '');
+      const full = `${pref} ${city} ${rest}`;
+      const b = classify(rest, kana, full, `${cityKana} ${kana}`);
+      if (b >= 0) push(b, { label: full, sub: kana, lat, lon });
+    }
+  }
+  return buckets[0].concat(buckets[1], buckets[2]).slice(0, 30);
 }
 
 /* ---------- 描画 ---------- */
@@ -250,18 +293,36 @@ function init() {
   });
   activateTab(tabs[0], false);
 
-  const box = $('muniSearch'), list = $('muniResults');
-  box.addEventListener('input', () => {
-    const res = searchMunicipalities(box.value);
+  const box = $('placeSearch'), list = $('placeResults');
+  let searchTimer = null;
+  function runSearch() {
+    const q = box.value;
+    if (!q.trim()) { list.innerHTML = ''; return; }
+    if (oazaState !== 'ready' && oazaState !== 'error') {
+      onOazaReady(runSearch);
+      list.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'note';
+      p.textContent = '大字・小字データを読込中…（市町村はすぐ表示されます）';
+      list.appendChild(p);
+    }
+    const res = searchPlaces(q);
     list.innerHTML = '';
     for (const r of res) {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'result';
-      b.textContent = `${r.pref} ${r.city}（${r.kana}）`;
-      b.addEventListener('click', () => { setPlace(r.lat, r.lon, `${r.pref} ${r.city}`); box.value = ''; list.innerHTML = ''; });
+      b.textContent = r.sub ? `${r.label}（${r.sub}）` : r.label;
+      b.addEventListener('click', () => { setPlace(r.lat, r.lon, r.label); box.value = ''; list.innerHTML = ''; });
       list.appendChild(b);
     }
+  }
+  box.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(runSearch, 120);
   });
+  box.addEventListener('focus', ensureOaza);
+  // 地名タブが開かれたら大字・小字データを先行ロード（SWプリキャッシュでオフライン可）
+  tabs[0].addEventListener('click', ensureOaza);
 
   $('gpsBtn').addEventListener('click', () => {
     $('gpsBtn').textContent = '取得中…'; $('gpsBtn').disabled = true;
