@@ -97,8 +97,15 @@ function renderTimeline(ev, fmtAstro) {
     row.className = 'timeline-item';
     const icon = document.createElement('span');
     icon.className = `timeline-icon ${i.cls}`;
-    // 出没は ↑↓、南中は ●、薄明は空欄。色（sun/moon）は cls で付ける。
-    icon.textContent = i.kind === 'rise' ? '↑' : i.kind === 'set' ? '↓' : i.kind === 'transit' ? '●' : '';
+    // 出没は太い塗り矢印↑↓、南中は塗り丸●、薄明は空欄。色（sun/moon）は cls で付ける。
+    const svg = i.kind === 'rise'
+      ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .8 15.2 8.6H11v6.6H5V8.6H.8Z"/></svg>'
+      : i.kind === 'set'
+      ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15.2.8 7.4H5V.8h6v6.6h4.2Z"/></svg>'
+      : i.kind === 'transit'
+      ? '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/></svg>'
+      : '';
+    if (svg) icon.innerHTML = svg;
     icon.setAttribute('aria-hidden', 'true');
     const time = document.createElement('span');
     time.className = 'timeline-time';
