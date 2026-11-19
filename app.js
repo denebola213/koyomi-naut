@@ -51,6 +51,9 @@ function render() {
   $('dmsLon').textContent = toDMS(lon, 'E', 'W');
   $('decLat').textContent = `(${lat.toFixed(4)}°)`;
   $('decLon').textContent = `(${lon.toFixed(4)}°)`;
+  // 確定した日付（結果ゾーン）: YYYY-MM-DD（曜）
+  const wd = ['日', '月', '火', '水', '木', '金', '土'][new Date(date + 'T12:00:00').getDay()];
+  setText('dateLabel', `${date}（${wd}）`);
 
   const ev = dayEvents(lat, lon, date);
   const fmtDur = min => min == null ? '—' : `${Math.floor(min / 60)}時間${Math.round(min % 60)}分`;

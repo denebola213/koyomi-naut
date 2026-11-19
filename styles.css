@@ -17,8 +17,19 @@ body {
 .top h1 { font-size: 20px; margin: 0; font-weight: 650; }
 .offline-note { margin: 12px 0 0; }
 .note { color: var(--dim); font-size: 13px; }
-section { margin-top: 28px; }
-h2 { font-size: 16px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 650; }
+/* ---------- ゾーン: 入力と結果の分離 ---------- */
+/* 入力ゾーンは地の色（paper）。結果ゾーンは薄い面 + 左罫で「読み取り専用」と分かるようにする。
+   影・カードは使わない（罫線と余白の階層）。 */
+.zone { margin-top: 32px; }
+.zone > h2 { font-size: 15px; margin: 0 0 4px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); font-weight: 700; }
+.zone-input > section { margin-top: 20px; }
+.zone-input h3, .zone-result h3 { font-size: 16px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 650; }
+.zone-result {
+  background: var(--result-bg); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  padding: 16px;
+}
+.zone-result > section { margin-top: 24px; }
+.zone-result > h2 { border-bottom-color: var(--accent); }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
 input, button {
   font: inherit; color: inherit; background: var(--paper);
@@ -47,18 +58,14 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .place-panel { border: 1px solid var(--line); border-top: 0; padding: 12px; margin: 0 0 4px; }
 .place-panel[hidden] { display: none; }
 
-/* ---------- 確定した場所（結果） ---------- */
-.place-result {
-  margin-top: 14px; padding: 12px;
-  background: var(--result-bg); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-}
-.place-result-label { margin: 0 0 4px; font-weight: 650; font-size: 14px; }
-.place-now { margin: 4px 0; }
-.dms { margin: 10px 0 0; border: 1px solid var(--line); background: var(--paper); }
-.dms > div { display: flex; gap: 16px; padding: 8px 12px; }
-.dms > div + div { border-top: 1px solid var(--line); }
-.dms dt { width: 3.5em; color: var(--dim); }
-.dms dd { margin: 0; font-size: 17px; font-variant-numeric: tabular-nums; }
+/* ---------- 確定した条件（結果ゾーン先頭） ---------- */
+.confirmed { margin: 12px 0 4px; }
+.confirmed-label { margin: 0 0 4px; font-weight: 650; font-size: 14px; }
+.confirmed-list { margin: 10px 0 0; border: 1px solid var(--line); background: var(--paper); }
+.confirmed-list > div { display: flex; gap: 16px; padding: 8px 12px; }
+.confirmed-list > div + div { border-top: 1px solid var(--line); }
+.confirmed-list dt { width: 3.5em; color: var(--dim); flex: 0 0 auto; }
+.confirmed-list dd { margin: 0; font-size: 17px; font-variant-numeric: tabular-nums; }
 .dim { color: var(--dim); font-size: 13px; }
 .help-btn {
   display: inline-flex; align-items: center; justify-content: center;

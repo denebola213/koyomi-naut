@@ -20,8 +20,12 @@
 
 <main>
   <p class="offline-note">計算は端末内で完結し、第三者への通信・データ送信はありません</p>
+
+  <!-- 入力ゾーン: 場所・日付の指定だけ。結果は持たない -->
+  <section class="zone zone-input" aria-labelledby="h-input">
+    <h2 id="h-input">入力</h2>
   <section aria-labelledby="h-place">
-    <h2 id="h-place">1. 場所</h2>
+    <h3 id="h-place">1. 場所</h3>
     <p class="note">場所の指定方法を1つ選んでください。</p>
     <div class="place-tabs" role="tablist" aria-label="場所の指定方法">
       <button type="button" role="tab" id="tab-muni" aria-controls="panel-muni" aria-selected="true" data-panel="panel-muni">市町村から探す</button>
@@ -54,27 +58,34 @@
       </div>
     </div>
 
-    <div class="place-result" aria-live="polite">
-      <p class="place-result-label">確定した場所（計算に使う座標）<span class="dim">— 自動表示</span></p>
-      <p class="place-now"><strong id="placeLabel">—</strong></p>
-      <dl class="dms">
-        <div><dt>緯度</dt><dd><span id="dmsLat">—</span> <span id="decLat" class="dim"></span></dd></div>
-        <div><dt>経度</dt><dd><span id="dmsLon">—</span> <span id="decLon" class="dim"></span></dd></div>
-      </dl>
-    </div>
   </section>
 
   <section aria-labelledby="h-date">
-    <h2 id="h-date">2. 日付</h2>
+    <h3 id="h-date">2. 日付</h3>
     <div class="row">
       <input id="dateInput" type="date" aria-label="日付">
       <button id="todayBtn" type="button">今日</button>
       <span class="note">時刻は端末のタイムゾーンで表示</span>
     </div>
   </section>
+  </section><!-- /入力ゾーン -->
+
+  <!-- 結果ゾーン: 確定した条件と計算結果だけ。入力控件は持たない -->
+  <section class="zone zone-result" aria-labelledby="h-result">
+    <h2 id="h-result">結果</h2>
+
+    <div class="confirmed" aria-live="polite">
+      <p class="confirmed-label">確定した条件（計算に使う値）<span class="dim">— 自動表示</span></p>
+      <dl class="confirmed-list">
+        <div><dt>場所</dt><dd><strong id="placeLabel">—</strong></dd></div>
+        <div><dt>緯度</dt><dd><span id="dmsLat">—</span> <span id="decLat" class="dim"></span></dd></div>
+        <div><dt>経度</dt><dd><span id="dmsLon">—</span> <span id="decLon" class="dim"></span></dd></div>
+        <div><dt>日付</dt><dd><span id="dateLabel">—</span></dd></div>
+      </dl>
+    </div>
 
   <section aria-labelledby="h-events">
-    <h2 id="h-events">3. 出没・薄明</h2>
+    <h3 id="h-events">3. 出没・薄明</h3>
     <div id="timeline" class="timeline" aria-label="指定日00:00から翌日日の出までの出没・薄明タイムライン"></div>
     <dl class="event-details">
       <div><dt>太陽最大高度</dt><dd id="evSunMax">—</dd></div>
@@ -92,9 +103,10 @@
   </section>
 
   <section aria-labelledby="h-traj">
-    <h2 id="h-traj">4. 太陽と月の軌道</h2>
+    <h3 id="h-traj">4. 太陽と月の軌道</h3>
     <canvas id="traj" height="360" aria-label="太陽と月の軌道図"></canvas>
   </section>
+  </section><!-- /結果ゾーン -->
 
   <footer>
     <p class="note">低精度計算（太陽・月とも誤差 ~0.3° 程度）。精密な観測計画には国立天文台等の値を確認してください。市町村データ: code4fukui/localgovjp（CC BY）。</p>
