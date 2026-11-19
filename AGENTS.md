@@ -80,11 +80,7 @@
 ## 検証
 
 - `npm run check`（`node --check` 群）
-- `npm test`（`node --test`、依存ゼロ。CI `.github/workflows/test.yml` で自動実行、TZ=Asia/Tokyo 固定）
-  - `test/astro.test.js` — `astro.js` の出没・薄明・南中・月齢・四大相（低精度 Meeus のため許容誤差で判定）
-  - `test/planets.test.js` — `planets.js` の惑星位置
-  - `test/search.test.js` — `app.js` の `searchPlaces`（漢字/かな/カタカナ・前方優先）
-  - `test/assets.test.js` — `sw.js` ASSETS の実在と `index.html` 参照の一致、市町村データ形状
+- `npm test`（`node --test`、依存ゼロ。CI で自動実行。詳細は `.agents/skills/koyomi-naut/references/testing.md`）
 - `npm run verify-dom`（`scripts/verify-dom.py`）
 - Node での数値テストは `require('./astro.js')`（`module.exports` あり）。
 - ラベル表示（四大相）は月齢±0.5 日ではなく黄経差の交差時刻で判定。
