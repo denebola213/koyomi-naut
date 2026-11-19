@@ -52,7 +52,7 @@
 
 ### キャッシュ・デプロイ
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v20 現在）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v21 現在）。
 - Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
 - デプロイは Cloudflare Pages（Git 連携）。`main` への直接 push は禁止——
   **branch → PR → プレビュー URL で確認 → ユーザー OK → squash merge → 本番**。
