@@ -30,18 +30,18 @@
     <h3 id="h-place">場所</h3>
     <p class="note">場所の指定方法を1つ選んでください。</p>
     <div class="place-tabs" role="tablist" aria-label="場所の指定方法">
-      <button type="button" role="tab" id="tab-muni" aria-controls="panel-muni" aria-selected="true" data-panel="panel-muni">市町村から探す</button>
+      <button type="button" role="tab" id="tab-place" aria-controls="panel-place" aria-selected="true" data-panel="panel-place">地名から探す</button>
       <button type="button" role="tab" id="tab-gps" aria-controls="panel-gps" aria-selected="false" tabindex="-1" data-panel="panel-gps">現在地を使う</button>
       <button type="button" role="tab" id="tab-coords" aria-controls="panel-coords" aria-selected="false" tabindex="-1" data-panel="panel-coords">座標を入力</button>
     </div>
 
-    <div role="tabpanel" id="panel-muni" aria-labelledby="tab-muni" class="place-panel">
-      <p class="note">市町村名で検索し、候補から場所を選んでください。</p>
+    <div role="tabpanel" id="panel-place" aria-labelledby="tab-place" class="place-panel">
+      <p class="note">市町村・大字・町丁目・小字（字）名で検索し、候補から場所を選んでください。座標は大字・町丁目の代表点です。</p>
       <div class="row">
-        <input id="muniSearch" type="search" inputmode="search" autocomplete="off"
-               placeholder="市町村を検索（例: 千代田区 / ちよだく / 札幌市）" aria-label="市町村検索">
+        <input id="placeSearch" type="search" inputmode="search" autocomplete="off"
+               placeholder="地名を検索（例: 千代田区 / 霞が関 / かすみがせき）" aria-label="地名検索">
       </div>
-      <div id="muniResults" class="results" role="listbox" aria-label="市町村候補"></div>
+      <div id="placeResults" class="results" role="listbox" aria-label="地名候補"></div>
     </div>
 
     <div role="tabpanel" id="panel-gps" aria-labelledby="tab-gps" class="place-panel" hidden>
@@ -111,7 +111,7 @@
   </section><!-- /結果ゾーン -->
 
   <footer>
-    <p class="note">低精度計算（太陽・月とも誤差 ~0.3° 程度）。精密な観測計画には国立天文台等の値を確認してください。市町村データ: code4fukui/localgovjp（CC BY）。</p>
+    <p class="note">低精度計算（太陽・月とも誤差 ~0.3° 程度）。精密な観測計画には国立天文台等の値を確認してください。市町村データ: code4fukui/localgovjp（CC BY）。大字・町丁目・小字データ: Geolonia 住所データ（国土交通省「大字・町丁目レベル位置参照情報」等を基にした CC BY 4.0）。</p>
   </footer>
 </main>
 

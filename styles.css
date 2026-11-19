@@ -62,6 +62,8 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 }
 .place-panel { border: 1px solid var(--line); border-top: 0; padding: 12px; margin: 0 0 4px; }
 .place-panel[hidden] { display: none; }
+.results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.results .result { display: block; width: 100%; text-align: left; }
 
 /* ---------- 確定した条件（結果ゾーン先頭） ---------- */
 .confirmed { margin: 12px 0 4px; }

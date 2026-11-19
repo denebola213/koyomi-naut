@@ -11,6 +11,7 @@
 | `app.js` | DOM 描画・イベント・localStorage 保存・GPS 取得 |
 | `astro.js` | 天文計算（Meeus 低精度）・出没・薄明・南中・月齢・四大相・遠近 |
 | `municipalities.js` | 市町村データ（code4fukui/localgovjp, CC BY） |
+| `oaza.js` | 大字・町丁目＋小字（字）データ（Geolonia 住所データ, CC BY 4.0）。`scripts/build-oaza.py` で再生成 |
 | `styles.css` | UI スタイル |
 | `sw.js` | Service Worker（ネットワーク優先・失敗時はキャッシュ） |
 | `manifest.webmanifest` | PWA マニフェスト |
@@ -52,7 +53,7 @@
 
 ### キャッシュ・デプロイ
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v21 現在）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v22 現在）。
 - Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
 - デプロイは Cloudflare Pages（Git 連携）。`main` への直接 push は禁止——
   **branch → PR → プレビュー URL で確認 → ユーザー OK → squash merge → 本番**。
