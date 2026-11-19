@@ -62,5 +62,5 @@ Service Worker・PWA インストールは HTTPS（または localhost）での�
 ## データ・ライセンス
 
 - 市町村データ（`municipalities.js`）: [code4fukui/localgovjp](https://github.com/code4fukui/localgovjp)（CC BY）
-- 大字・町丁目・小字データ（`oaza.js`）: [Geolonia 住所データ](https://github.com/geolonia/japanese-addresses)（CC BY 4.0。国土交通省「大字・町丁目レベル位置参照情報」等を基に毎月更新）。緯度経度は大字・町丁目の代表点で、小字（字）ごとの座標ではない。データ更新は `python3 scripts/build-oaza.py`（ビルド時に一度だけ取得し、実行時通信なし）
+- 大字・町丁目・小字データ（`oaza.js`）: [Geolonia 住所データ](https://github.com/geolonia/japanese-addresses)（CC BY 4.0。国土交通省「大字・町丁目レベル位置参照情報」等を基に毎月更新）。緯度経度は大字・町丁目の代表点で、小字（字）ごとの座標ではない。データ更新は `node scripts/build-oaza.mjs`（ビルド時に一度だけ取得し、実行時通信なし）
 - コード: MIT（`LICENSE` 参照）

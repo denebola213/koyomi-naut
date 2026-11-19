@@ -11,7 +11,7 @@
 | `app.js` | DOM 描画・イベント・localStorage 保存・GPS 取得 |
 | `astro.js` | 天文計算（Meeus 低精度）・出没・薄明・南中・月齢・四大相・遠近 |
 | `municipalities.js` | 市町村データ（code4fukui/localgovjp, CC BY） |
-| `oaza.js` | 大字・町丁目＋小字（字）データ（Geolonia 住所データ, CC BY 4.0）。`scripts/build-oaza.py` で再生成 |
+| `oaza.js` | 大字・町丁目＋小字（字）データ（Geolonia 住所データ, CC BY 4.0）。`node scripts/build-oaza.mjs` で再生成 |
 | `styles.css` | UI スタイル |
 | `sw.js` | Service Worker（ネットワーク優先・失敗時はキャッシュ） |
 | `manifest.webmanifest` | PWA マニフェスト |
