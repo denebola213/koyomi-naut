@@ -1,1 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#0b1020"/><path d="M116 400 A140 140 0 0 1 396 400" fill="none" stroke="#ffd54d" stroke-width="18" stroke-linecap="round"/><line x1="0" y1="400" x2="512" y2="400" stroke="#ffd54d" stroke-width="10"/><circle cx="368" cy="144" r="46" fill="#b8c7e0"/><circle cx="384" cy="144" r="46" fill="#0b1020"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Day / Night</title>
+  <defs>
+    <linearGradient id="bg" x1="128" y1="0" x2="128" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0c2544"/>
+      <stop offset="0.62170517" stop-color="#464951"/>
+      <stop offset="1" stop-color="#e5ab72"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="url(#bg)"/>
+  <!-- Sun: left semicircle -->
+  <path d="m 126.54719,60.473998 a 68.555083,68.555083 0 0 0 0,137.110162 z" fill="#f2c96d"/>
+  <!-- Moon: right semicircle -->
+  <path d="m 129.81172,27.207345 a 102.25377,102.25377 0 0 1 0,204.507535 z" fill="#dce6f1"/>
+  <!-- Sun rays -->
+  <path d="m 126.54719,52.663616 -0.005,-26.467159 -7.34927,26.467159 z" fill="#f2c96d"/>
+  <path d="m 126.54715,205.39453 0.0817,26.46705 -7.4352,-26.44315 z" fill="#f2c96d"/>
+  <path d="M 104.11988,55.666981 87.193321,34.023161 90.531299,61.29013 Z" fill="#f2c96d"/>
+  <path d="M 77.750675,69.835029 53.829848,56.311724 67.353155,80.232551 Z" fill="#f2c96d"/>
+  <path d="M 58.808253,93.013181 31.541287,89.675196 53.185105,106.60178 Z" fill="#f2c96d"/>
+  <path d="m 50.18174,121.67572 -26.467159,7.35335 26.467159,7.35336 z" fill="#f2c96d"/>
+  <path d="m 53.185105,151.45637 -21.643818,16.92659 27.266966,-3.33798 z" fill="#f2c96d"/>
+  <path d="M 67.353155,177.8256 53.829848,201.74643 77.750675,188.22312 Z" fill="#f2c96d"/>
+  <path d="M 90.531299,196.76802 87.193321,224.035 104.11988,202.39117 Z" fill="#f2c96d"/>
+  <!-- Star -->
+  <polygon points="312.23,204.18 324.17,204.75 314.85,212.22 317.99,223.75 308,217.2 298.01,223.75 301.15,212.22 291.83,204.75 303.77,204.18 308,193" fill="#1b3a5c" transform="matrix(0.81613191,0,0,0.81613191,-93.376999,-101.50242)"/>
+</svg>
