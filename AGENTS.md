@@ -85,5 +85,5 @@
 
 ## 参照
 
-- 本番: https://koyomi-naut.pages.dev
+- 本番: https://koyomi-naut.st-albireo.net/
 - リポジトリ: https://github.com/denebola213/koyomi-naut（PR 経由で本番公開。`main` 直接 push 禁止）
