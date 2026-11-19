@@ -1,5 +1,5 @@
 /* Sky PWA service worker: ネットワーク優先・失敗時にキャッシュ (オフライン対応) */
-const CACHE = 'skypwa-v31';
+const CACHE = 'skypwa-v32';
 const ASSETS = [
   './',
   'index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   'planets.js',
   'constellations.js',
   'bright-stars.js',
+  'milky-way.js',
   'app.js',
   'municipalities.js',
   'oaza.js',
