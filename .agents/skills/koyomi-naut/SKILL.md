@@ -1,7 +1,7 @@
 ---
 name: koyomi-naut
 description: koyomi-naut の実装ルールを確認する。通信・表示・デプロイ方針。
-version: 0.3.0
+version: 0.4.0
 author: denebola213, Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -20,7 +20,8 @@ skill としてまとめたもの。
 
 計算（太陽・月の位置、出没・薄明・南中、月齢・四大相・遠近）はすべて端末内
 （`astro.js` の Meeus 低精度式）で行う。第三者への通信・データ送信はしない。
-静的サイトでビルドなし、Cloudflare Pages に `main` push で自動デプロイする。
+静的サイトでビルドなし。開発は **branch → PR → Cloudflare Pages プレビュー →
+squash merge → `main` 本番デプロイ**（`main` 直接 push 禁止、手順は `DEPLOY.md`）。
 
 ## When to Use
 
@@ -60,10 +61,21 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 
 ## キャッシュ・SW
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v13）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v20）。
 - `/sw.js` と静的アセットは `_headers` で no-cache 設定済み。
 - SW の責務はオフライン互換（ネットワーク優先・失敗時はキャッシュ）のみで、
   第三者へのデータ送信はしない。
+
+## 開発ワークフロー（branch → PR → プレビュー → merge）
+
+- `main` への直接 push は禁止（ブランチ保護: PR 必須）。作業は `<type>/<short-desc>`
+  ブランチで行い、PR を作る。詳細は `DEPLOY.md`。
+- PR ごとに Cloudflare Pages がプレビュー専用デプロイを自動発行する
+  （`preview_deployment_setting = "all"`）。プレビュー URL を確認し、
+  ユーザーの OK が出た場合のみ squash merge する（先行マージ禁止）。
+- マージで `main` が進むと本番（`koyomi-naut.pages.dev`）が自動デプロイされる。
+  マージ成功だけでなく本番 URL / `sw.js` の新バージョンを `curl` で確認する。
+- リポジトリは squash merge のみ可（merge commit / rebase は不可）。
 
 ## 検証
 

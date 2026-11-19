@@ -36,7 +36,9 @@ GPS または市町村・座標入力から、日の出・日の入り、月の�
 ### Cloudflare Pages（Terraform 管理）
 
 - Pages プロジェクト: `koyomi-naut`
-- Production branch: `main`（`main` への push で自動デプロイ）
+- Production branch: `main`（**PR 経由のみ**。`main` 直接 push 禁止）
+- 開発ワークフロー: branch → PR → プレビュー URL で確認 → ユーザー OK →
+  squash merge → 本番デプロイ（詳細は [`DEPLOY.md`](DEPLOY.md)）
 - Build command: `exit 0`（ビルドなし）/ Build output directory: `/`（リポジトリ直下）
 - 定義: [`terraform/pages.tf`](terraform/pages.tf) / 手順: [`DEPLOY.md`](DEPLOY.md)
 

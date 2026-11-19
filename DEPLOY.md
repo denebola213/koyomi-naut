@@ -1,37 +1,97 @@
-# Cloudflare Pages へのデプロイ設定（main push で自動デプロイ）
+# 開発ワークフロー（branch → PR → プレビュー確認 → squash merge → 本番）
 
-`main` への push で Cloudflare Pages が自動デプロイする Git 連携を設定するには、
-次のいずれかが必要です（どちらも Cloudflare アカウントの認証が必須）。
+`main` への直接 push は禁止（ブランチ保護で PR 経由必須）。通常の変更は
+**ブランチで作業し、PR を作り、Cloudflare Pages のプレビュー URL で確認してから
+squash merge する**。マージした `main` だけが本番デプロイの対象になる。
 
-## A. ダッシュボードで接続（推奨・数分）
+## 手順
 
-1. [Cloudflare ダッシュボード](https://dash.cloudflare.com/) → Workers & Pages → Create → Pages → Connect to Git
-2. GitHub を認証し、`denebola213/koyomi-naut` を選択
-3. 設定値:
-   - Production branch: `main`
-   - Build command: `exit 0`（ビルドなし）
-   - Build output directory: `/`（リポジトリ直下）
-4. Save and Deploy
+1. **ブランチ作成**（`main` から）
 
-以降、`main` への push ごとに本番デプロイ、PR ごとにプレビュー URL が自動発行されます。
+   ```bash
+   git fetch origin
+   git checkout -b <type>/<short-desc> origin/main
+   # 例: feat/timeline-icon, fix/moon-phase, docs/pr-preview-workflow
+   ```
 
-## B. Terraform（IaC）で管理
+2. **作業＋検証**（`AGENTS.md` の検証節）
 
-`terraform/pages.tf` に Pages プロジェクト定義があります。
+   ```bash
+   node --check app.js astro.js
+   ```
+
+   表示・計算に触れる場合は `require('./astro.js')` の数値テストも実施する。
+   `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（PR 内で完結させる）。
+
+3. **PR 作成**
+
+   ```bash
+   git push -u origin <type>/<short-desc>
+   gh pr create --base main --title "<type>: <内容>" --body "..."
+   ```
+
+   PR 本文には「何を変更したか / 検証結果 / 注意点」を書く
+   （テンプレート: `.github/pull_request_template.md`）。
+
+4. **ステージング（プレビュー）確認**
+
+   - Cloudflare Pages の Git 連携が PR ごとにプレビュー専用デプロイを自動発行する
+     （`preview_deployment_setting = "all"`、対象は全ブランチ）。
+   - プレビュー URL は PR への Cloudflare コメント、および
+     Pages の Deployments 一覧（`https://<hash>.koyomi-naut.pages.dev`）で確認できる。
+   - エージェントはデプロイ成功（Deployments API の `latest_stage.status = success`）と
+     プレビュー URL の 200 を確認し、URL を PR / 作業報告に載せる。
+   - ユーザーがプレビュー URL で見た目・動作を確認する。
+
+5. **レビュー OK → squash merge**
+
+   ユーザーの OK が出た場合のみマージする（エージェントが先行してマージしない）。
+
+   ```bash
+   gh pr merge <PR番号> --squash --delete-branch
+   ```
+
+   リポジトリ設定上 squash のみ可（merge commit / rebase は不可）。
+   マージ後はブランチは自動削除される。
+
+6. **本番確認**
+
+   - マージで `main` が進み、本番デプロイ（`koyomi-naut.pages.dev`）が自動発行される。
+   - エージェントは Deployments API で success を確認し、
+     本番 HTML / `sw.js`（新しい `skypwa-vN`）を `curl` で確認する。
+     `git push` / merge の成功だけでは本番反映を証明できない。
+
+## 運用ルール
+
+- `main` への直接 push・force push はしない（ブランチ保護で拒否される）。
+  緊急時のみ、リポジトリ管理者が保護を一時解除して対応する。
+- マージは squash のみ。1 PR = 1 変更内容・1 コミット（`skypwa-vN` 追跡が綺麗になる）。
+- 承認（レビュー）は必須ではない（保護設定: 承認数 0）。ただし
+  **マージ実行はユーザーの OK 後**に限る。
+- プレビューはブランチ別 URL（固定 staging ドメインは持たない）。
+  URL はブランチ名に依存するため、PR を閉じるとプレビューも消える。
+
+## Cloudflare Pages 設定（Terraform 管理）
+
+`terraform/pages.tf` で管理する。現行値（本番・プレビューとも反映済み）:
+
+- Production branch: `main`、Build command: `exit 0`（ビルドなし）、出力: `/`
+- `preview_deployment_setting = "all"`（全ブランチでプレビュー発行）
+- `pr_comments_enabled = true`（PR にプレビュー URL をコメント）
 
 ```bash
-# 1) Cloudflare で API トークン発行（Pages Read/Edit 権限）
-export CLOUDFLARE_API_TOKEN=<トークン>
-# 2) アカウント ID を用意
+export CLOUDFLARE_API_TOKEN=<トークン>   # Pages Read/Edit 権限
 terraform -chdir=terraform init
 terraform -chdir=terraform apply -var="cf_account_id=<アカウントID>"
 ```
 
-注意: Cloudflare 側で GitHub 連携（Pages → Settings → GitHub integration）を
-有効化しておく必要があります。また provider v5 の `source` 書き込みには
-既知の不具合があるため、作成後に動作確認してください。
+state を失った場合は新規作成せず import する（重複プロジェクトになるため）:
 
-## C. Wrangler で直結したい場合
+```bash
+terraform -chdir=terraform import -var="cf_account_id=<アカウントID>" \
+  cloudflare_pages_project.koyomi_naut "<アカウントID>/koyomi-naut"
+```
 
-Git 連携が不要なら `wrangler pages deploy` でもデプロイできますが、
-「main push で自動デプロイ」には Git 連携（A か B）が必要です。
+GitHub 連携（Pages → Settings → GitHub integration）はダッシュボードで一度接続済み。
+`gh api repos/denebola213/koyomi-naut/hooks` が空でも、Pages 側の Git 連携が
+webhook を管理しているため push / PR でデプロイされる（実績で確認済み）。
