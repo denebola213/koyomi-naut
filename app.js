@@ -295,7 +295,7 @@ function drawTrajectory(lat, lon, date) {
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
  * 一等星は bright-stars.js（等級1.5以下22星）、黄道は黄道緯度0°の円（ラベルなし）、
- * 天の川は milky-way.js（帯を円盤でクリップして半透明に塗る）。 */
+ * 天の川は milky-way.js（帯を銀河座標で判定して半透明に塗る）。 */
 /* 星座名の位置: 結びの点の球面平均（単位ベクトル平均）で中心を求める */
 let _constLabelCache = null;
 function constellationLabelPos(c) {
@@ -417,7 +417,8 @@ function drawSkyChart(lat, lon, when) {
     const lst = (gmst + lon) * Math.PI / 180, latr = lat * Math.PI / 180;
     const up = [Math.cos(latr) * Math.cos(lst), Math.cos(latr) * Math.sin(lst), Math.sin(latr)];
     const north = [-Math.sin(latr) * Math.cos(lst), -Math.sin(latr) * Math.sin(lst), Math.cos(latr)];
-    const east = [-Math.sin(lst), Math.cos(lst), 0];
+    // 東方向は赤経増加と逆向き（地平座標の東 = 赤道座標では [sin LST, -cos LST, 0]）。逆にすると塗りだけ東西反転する
+    const east = [Math.sin(lst), -Math.cos(lst), 0];
     const zg = unitVec(192.859508, 27.128336), xg = unitVec(266.405, -29.008);
     const ygRaw = [zg[1] * xg[2] - zg[2] * xg[1], zg[2] * xg[0] - zg[0] * xg[2], zg[0] * xg[1] - zg[1] * xg[0]];
     const yn = Math.hypot(ygRaw[0], ygRaw[1], ygRaw[2]);
