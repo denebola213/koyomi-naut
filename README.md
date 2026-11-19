@@ -19,6 +19,7 @@ GPS または市町村・座標入力から、日の出・日の入り、月の�
 - 空のようす（全天図）を時間指定可能に（指定日18時±18時間のスライダー）
 - 水星・金星・火星・木星・土星の位置表示（結果タブ「空のようす」内、表示切替あり）
 - 88 星座の結びだけ表示、表示/非表示切り替え（同上）
+- 一等星（等級1.5以下22星）を惑星より小さい点で表示（非表示／位置のみ／名前の切替）、黄道をラベルなしで表示（切替あり）
 
 ## 使い方
 
@@ -65,4 +66,5 @@ Service Worker・PWA インストールは HTTPS（または localhost）での�
 - 市町村データ（`municipalities.js`）: [code4fukui/localgovjp](https://github.com/code4fukui/localgovjp)（CC BY）
 - 大字・町丁目・小字データ（`oaza.js`）: [Geolonia 住所データ](https://github.com/geolonia/japanese-addresses)（CC BY 4.0。国土交通省「大字・町丁目レベル位置参照情報」等を基に毎月更新）。緯度経度は大字・町丁目の代表点で、小字（字）ごとの座標ではない。データ更新は `node scripts/build-oaza.mjs`（ビルド時に一度だけ取得し、実行時通信なし）
 - 星座の結びデータ（`constellations.js`）: [d3-celestial](https://github.com/ofrohn/d3-celestial) の `data/constellations.lines.json`（BSD 3-Clause、IAU 星座線図に基づく線データ。J2000 赤経・赤緯）
+- 一等星データ（`bright-stars.js`）: 同 `data/stars.6.json` の等級1.5以下22星（BSD 3-Clause、J2000 赤経・赤緯。和名付き）
 - コード: MIT（`LICENSE` 参照）

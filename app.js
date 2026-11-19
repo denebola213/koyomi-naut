@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true };
+const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true, starDisplay: 'name', showEcliptic: true };
 const isRedTheme = () => document.documentElement.dataset.theme === 'red';
 const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -36,7 +36,7 @@ function setPlace(lat, lon, label) {
   render();
 }
 function save() {
-  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations })); } catch (e) {}
+  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations, starDisplay: state.starDisplay, showEcliptic: state.showEcliptic })); } catch (e) {}
 }
 function load() {
   try {
@@ -52,6 +52,8 @@ function load() {
       if (s.view === 'sky' || s.view === 'events') state.view = s.view;
       if (typeof s.showPlanets === 'boolean') state.showPlanets = s.showPlanets;
       if (typeof s.showConstellations === 'boolean') state.showConstellations = s.showConstellations;
+      if (s.starDisplay === 'off' || s.starDisplay === 'pos' || s.starDisplay === 'name') state.starDisplay = s.starDisplay;
+      if (typeof s.showEcliptic === 'boolean') state.showEcliptic = s.showEcliptic;
     }
   } catch (e) {}
 }
@@ -288,7 +290,8 @@ function drawTrajectory(lat, lon, date) {
 /* 空のようす: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
  * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
- * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）。 */
+ * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
+ * 一等星は bright-stars.js（等級1.5以下22星）、黄道は黄道緯度0°の円（ラベルなし）。 */
 function drawSkyChart(lat, lon, when) {
   const cv = $('skyChart');
   if (!cv) return;
@@ -301,9 +304,13 @@ function drawSkyChart(lat, lon, when) {
   const ink = red ? '#ffd7d7' : (isDarkPair() ? '#d8d8d8' : '#222'), dim = red ? '#b05a5a' : (isDarkPair() ? '#666' : '#999'), grid = red ? '#4a1515' : (isDarkPair() ? '#333' : '#ddd');
   ctx.clearRect(0, 0, W, H);
   ctx.font = '11px system-ui, sans-serif';
-  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 28;
+  const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 24;
   const xy = (az, alt) => {
     const r = R * (90 - alt) / 90, a = az * Math.PI / 180;
+    return [cx - r * Math.sin(a), cy - r * Math.cos(a)];
+  };
+  const xyR = (az, r) => {
+    const a = az * Math.PI / 180;
     return [cx - r * Math.sin(a), cy - r * Math.cos(a)];
   };
   // 高度グリッド（30/60）と地平線
@@ -315,8 +322,8 @@ function drawSkyChart(lat, lon, when) {
   ctx.strokeStyle = dim; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
   ctx.fillStyle = dim;
   for (const [az, lab] of [[0, 'N'], [90, 'E'], [180, 'S'], [270, 'W']]) {
-    const [x, y] = xy(az, -6);
-    ctx.textAlign = 'center'; ctx.fillText(lab, x, y); ctx.textAlign = 'left';
+    const [x, y] = xyR(az, R - 14); // 方位ラベルは円盤の内側に置く（外側だと全幅化で欠ける）
+    ctx.textAlign = 'center'; ctx.fillText(lab, x, y + 4); ctx.textAlign = 'left';
     const [hx, hy] = xy(az, 0);
     ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
   }
@@ -326,6 +333,28 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillText(name, x + 8, y + 4);
   };
+  // 黄道（ラベルなし）: 黄道緯度0°の円を2°刻みでサンプルし、地平線下で途切る
+  if (state.showEcliptic) {
+    const e = 23.439 - 0.00000036 * (julianDay(when) - 2451545.0);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+    ctx.strokeStyle = red ? '#a04a4a' : (isDarkPair() ? '#8a7aa8' : '#9a8ab8');
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    let started = false;
+    for (let eclLon = 0; eclLon <= 360; eclLon += 2) {
+      const L = eclLon * Math.PI / 180;
+      const x = Math.cos(L), y = Math.sin(L) * Math.cos(e * Math.PI / 180), z = Math.sin(L) * Math.sin(e * Math.PI / 180);
+      const ra = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+      const dec = Math.asin(z) * 180 / Math.PI;
+      const p = altAz(ra, dec, when, lat, lon);
+      if (p.alt < 0) { started = false; continue; }
+      const [px, py] = xy(p.az, p.alt);
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
   // 星座の結び（線のみ）: 地平線円でクリップし、はみ出しを切る
   if (state.showConstellations && typeof CONSTELLATIONS !== 'undefined') {
     ctx.save();
@@ -346,6 +375,19 @@ function drawSkyChart(lat, lon, when) {
       }
     }
     ctx.restore();
+  }
+  // 一等星: 惑星より小さい点（半径2.2）。表示は 非表示 / 位置のみ / 名前
+  if (state.starDisplay !== 'off' && typeof BRIGHT_STARS !== 'undefined') {
+    ctx.fillStyle = red ? '#ffd7d7' : (isDarkPair() ? '#e8e8ea' : '#1c1c1e');
+    ctx.font = '10px system-ui, sans-serif';
+    for (const s of BRIGHT_STARS) {
+      const p = altAz(s.ra, s.dec, when, lat, lon);
+      if (p.alt < 0) continue;
+      const [x, y] = xy(p.az, p.alt);
+      ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
+      if (state.starDisplay === 'name') ctx.fillText(s.name, x + 5, y + 3);
+    }
+    ctx.font = '11px system-ui, sans-serif';
   }
   const below = [];
   const drawBody = (name, p, color) => {
@@ -476,6 +518,8 @@ function init() {
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
   $('planetToggle').checked = state.showPlanets;
   $('constellationToggle').checked = state.showConstellations;
+  $('starDisplay').value = state.starDisplay;
+  $('eclipticToggle').checked = state.showEcliptic;
   // 空のようすの時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
   $('timeSlider').value = state.skyOffsetMin;
   $('timeSlider').addEventListener('input', e => {
@@ -486,6 +530,8 @@ function init() {
   });
   $('planetToggle').addEventListener('change', e => { state.showPlanets = e.target.checked; save(); render(); });
   $('constellationToggle').addEventListener('change', e => { state.showConstellations = e.target.checked; save(); render(); });
+  $('starDisplay').addEventListener('change', e => { state.starDisplay = e.target.value; save(); render(); });
+  $('eclipticToggle').addEventListener('change', e => { state.showEcliptic = e.target.checked; save(); render(); });
 
   /* 「遠近」説明ポップアップ */
   const moonHelpBtn = $('moonHelpBtn');

@@ -133,9 +133,17 @@
           <div class="row">
             <label><input id="planetToggle" type="checkbox" checked> 惑星を表示</label>
             <label><input id="constellationToggle" type="checkbox" checked> 星座の結びを表示</label>
+            <label>一等星
+              <select id="starDisplay" aria-label="一等星の表示">
+                <option value="off">非表示</option>
+                <option value="pos">位置のみ</option>
+                <option value="name" selected>名前</option>
+              </select>
+            </label>
+            <label><input id="eclipticToggle" type="checkbox" checked> 黄道を表示</label>
           </div>
         </div>
-        <p class="note">中央=天頂、外周=地平線、北を上・東を左（画面を上に向けて空と重ねたときの向き）。星座の結びは線のみ、惑星は水星〜土星を点とラベルで表示。</p>
+        <p class="note">中央=天頂、外周=地平線、北を上・東を左（画面を上に向けて空と重ねたときの向き）。星座の結びは線のみ、惑星は水星〜土星を点とラベルで表示。一等星は等級1.5以下の22星で、惑星より小さい点で表示。</p>
       </section>
     </div><!-- /panel-sky -->
   </section><!-- /結果ゾーン -->
@@ -157,6 +165,7 @@
 <script src="astro.js"></script>
 <script src="planets.js"></script>
 <script src="constellations.js"></script>
+<script src="bright-stars.js"></script>
 <script src="app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
