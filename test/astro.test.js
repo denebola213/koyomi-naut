@@ -131,6 +131,21 @@ test('moonAge: 0..SYNODIC の範囲、新月基準日はほぼ0', () => {
   }
 });
 
+test('moonAge: 月齢カレンダー（正午・連続日）で1日ごとに約1増え SYNODIC で巻き戻る', () => {
+  // 月齢カレンダーは各日正午の moonAge() を並べるだけ。月内連続日で
+  // 前日からの差が +1（巻き戻り時は +1-SYNODIC）になることを確認する。
+  let prev = null;
+  for (let d = 1; d <= 31; d++) {
+    const age = moonAge(new Date(2026, 0, d, 12));
+    assert.ok(age >= 0 && age < SYNODIC, `d=${d} age=${age}`);
+    if (prev != null) {
+      const diff = ((age - prev) % SYNODIC + SYNODIC) % SYNODIC;
+      assert.ok(Math.abs(diff - 1) < 0.01, `d=${d} diff=${diff}`);
+    }
+    prev = age;
+  }
+});
+
 test('phaseAngle: 0..360 の範囲', () => {
   for (let m = 0; m < 12; m++) {
     const p = phaseAngle(new Date(2026, m, 15, 12));

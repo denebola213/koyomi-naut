@@ -65,6 +65,17 @@
       <input id="dateInput" type="date" aria-label="日付">
       <button id="todayBtn" type="button">今日</button>
     </div>
+    <details id="moonCal" class="moon-cal">
+      <summary>月齢カレンダー</summary>
+      <div class="moon-cal-head">
+        <button id="moonCalPrev" type="button" aria-label="前月">‹</button>
+        <strong id="moonCalTitle">—</strong>
+        <button id="moonCalNext" type="button" aria-label="翌月">›</button>
+      </div>
+      <div class="moon-cal-week" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+      <div id="moonCalGrid" class="moon-cal-grid" role="group" aria-label="月齢カレンダー"></div>
+      <p class="note">各日は正午の月齢です。</p>
+    </details>
   </section>
   </section><!-- /入力ゾーン -->
 
