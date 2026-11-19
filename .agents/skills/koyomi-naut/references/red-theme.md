@@ -10,7 +10,7 @@
 - 実装は `<html data-theme="red">` + `localStorage 'skypwa-theme'`。
   `index.html` の `<head>` に先行適用する小スクリプトを入れてフラッシュを防ぎ、
   `app.js` の `init()` でボタン状態を同期、切替時に `render()` で Canvas を描き直す。
-- `applyTheme()` で `meta theme-color`（赤時 `#0f0202`）も切り替える。
+- `applyTheme()` で `meta theme-color`（赤時 `#120202`／ダーク `#12100e`／ライト `#f4efe7`）も切り替える。
 
 ## パレット
 
@@ -18,17 +18,20 @@
 
 | 変数 | 値 |
 |---|---|
-| `--paper` | `#0f0202` |
-| `--ink` | `#ffd7d7` |
-| `--dim` | `#d98c8c` |
+| `--paper` | `#120202` |
+| `--ink` | `#eec2c2` |
+| `--dim` | `#c67f7f` |
 | `--line` | `#5f1f1f` |
 | `--accent` | `#ff4d4d` |
-| `--sun` | `#ff8a66` |
-| `--moon` | `#ffb3b3` |
-| `--astro` | `#ff6b6b` |
+| `--sun` | `#e07a5a` |
+| `--moon` | `#d9a0a0` |
+| `--astro` | `#d95f5f` |
 
 - `color-scheme: dark`。
-- 対 `#0f0202` のコントラストは本文 15.5／補助文 7.9／accent 6.2（WCAG 4.5 以上を確認済み）。
+- 対 `#120202` のコントラストは本文 12.7／補助文 6.5／accent 6.2（WCAG 4.5 以上を確認済み）。
+- 全テーマ共通で「地を落として眩しさを下げる」方針（前景の濃さを変えず地を暗く／くすませる）。
+  ライト地 `#f4efe7`、ダーク地 `#12100e`（暖かみのある黒）。canvas 描画色も `styles.css` の
+  変数値に合わせてくすませてある（特に月相の照部・天の川の alpha を下げる）。
 - 太陽＝実線、月＝破線を維持して赤同士でも区別する。
 
 ## Canvas

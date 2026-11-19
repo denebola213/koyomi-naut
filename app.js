@@ -16,7 +16,7 @@ function applyTheme(red) {
     toggle.textContent = red ? '通常テーマ' : '赤色テーマ';
   }
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = red ? '#0f0202' : '#0b1020';
+  if (meta) meta.content = red ? '#120202' : (isDarkPair() ? '#12100e' : '#f4efe7');
   try { localStorage.setItem(THEME_KEY, red ? 'red' : 'default'); } catch (e) {}
 }
 
@@ -234,12 +234,12 @@ function drawMoonPhaseInto(cv, age, S) {
   const red = isRedTheme();
   ctx.clearRect(0, 0, S, S);
   // 暗部
-  ctx.fillStyle = red ? '#3a0d0d' : (isDarkPair() ? '#3a3f4a' : '#c9ccd4');
+  ctx.fillStyle = red ? '#3a0d0d' : (isDarkPair() ? '#2a2723' : '#ddd5c6');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
   // 照部: 行ごとに終端楕円の内側を塗る
   const k = Math.cos(2 * Math.PI * age / SYNODIC);
   const waxing = age < SYNODIC / 2;
-  ctx.fillStyle = red ? '#ffb3b3' : (isDarkPair() ? '#f2ead0' : '#e8d98a');
+  ctx.fillStyle = red ? '#d9a0a0' : (isDarkPair() ? '#d9cfa8' : '#d9c078');
   for (let y = -r; y <= r; y++) {
     const hw = Math.sqrt(Math.max(0, r * r - y * y));
     let x0, x1;
@@ -247,7 +247,7 @@ function drawMoonPhaseInto(cv, age, S) {
     else { x0 = cx - hw; x1 = cx - k * hw; }
     if (x1 > x0) ctx.fillRect(x0, cy + y, x1 - x0, 1);
   }
-  ctx.strokeStyle = red ? '#d98c8c' : (isDarkPair() ? '#8a8f9a' : '#9a9da6');
+  ctx.strokeStyle = red ? '#c67f7f' : (isDarkPair() ? '#9a927f' : '#b8ae9a');
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
 }
 function drawMoonPhase(age) {
@@ -261,7 +261,7 @@ function drawTrajectory(lat, lon, date) {
   const W = cv.clientWidth || 720, H = cv.clientHeight || 360;
   cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const red = isRedTheme();
-  const ink = red ? '#ffd7d7' : (isDarkPair() ? '#d8d8d8' : '#222'), dim = red ? '#b05a5a' : (isDarkPair() ? '#666' : '#999'), grid = red ? '#4a1515' : (isDarkPair() ? '#333' : '#ddd');
+  const ink = red ? '#eec2c2' : (isDarkPair() ? '#cfc8ba' : '#2e2a24'), dim = red ? '#c67f7f' : (isDarkPair() ? '#9a927f' : '#6f675a'), grid = red ? '#4a1a1a' : (isDarkPair() ? '#37322b' : '#d8d0c2');
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = ink; ctx.strokeStyle = grid; ctx.lineWidth = 1; ctx.font = '11px system-ui, sans-serif';
   const padL = 34, padR = 10, padT = 14, padB = 26;
@@ -294,8 +294,8 @@ function drawTrajectory(lat, lon, date) {
     }
     ctx.stroke(); ctx.setLineDash([]);
   }
-  path(sun, red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'), 2);
-  path(moon, red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'), 1.6, [5, 3]);
+  path(sun, red ? '#e07a5a' : (isDarkPair() ? '#d9a94a' : '#9a5b1e'), 2);
+  path(moon, red ? '#d9a0a0' : (isDarkPair() ? '#8aa3c2' : '#3a5a8c'), 1.6, [5, 3]);
   // 時刻ティック (3時間ごと)
   ctx.fillStyle = ink;
   for (const p of sun) {
@@ -404,7 +404,7 @@ function drawSkyChart(lat, lon, when) {
   const W = cv.clientWidth || 720, H = cv.clientHeight || 420;
   cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const red = isRedTheme();
-  const ink = red ? '#ffd7d7' : (isDarkPair() ? '#d8d8d8' : '#222'), dim = red ? '#b05a5a' : (isDarkPair() ? '#666' : '#999'), grid = red ? '#4a1515' : (isDarkPair() ? '#333' : '#ddd');
+  const ink = red ? '#eec2c2' : (isDarkPair() ? '#cfc8ba' : '#2e2a24'), dim = red ? '#c67f7f' : (isDarkPair() ? '#9a927f' : '#6f675a'), grid = red ? '#4a1a1a' : (isDarkPair() ? '#37322b' : '#d8d0c2');
   ctx.clearRect(0, 0, W, H);
   ctx.font = '11px system-ui, sans-serif';
   const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 24;
@@ -449,7 +449,7 @@ function drawSkyChart(lat, lon, when) {
     const north = [-Math.sin(latr) * Math.cos(lst), -Math.sin(latr) * Math.sin(lst), Math.cos(latr)];
     // 東方向は赤経増加と逆向き（地平座標の東 = 赤道座標では [sin LST, -cos LST, 0]）。逆にすると東西反転する
     const east = [Math.sin(lst), -Math.cos(lst), 0];
-    ctx.fillStyle = red ? 'rgba(255,150,150,0.16)' : (isDarkPair() ? 'rgba(200,205,220,0.22)' : 'rgba(150,155,170,0.30)');
+    ctx.fillStyle = red ? 'rgba(255,150,150,0.14)' : (isDarkPair() ? 'rgba(201,194,186,0.16)' : 'rgba(160,150,130,0.22)');
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
     const step = 2;
@@ -476,7 +476,7 @@ function drawSkyChart(lat, lon, when) {
     const e = 23.439 - 0.00000036 * (julianDay(when) - 2451545.0);
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
-    ctx.strokeStyle = red ? '#a04a4a' : (isDarkPair() ? '#8a7aa8' : '#9a8ab8');
+    ctx.strokeStyle = red ? '#a04a4a' : (isDarkPair() ? '#a08fb8' : '#8a7a9e');
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     let started = false;
@@ -497,7 +497,7 @@ function drawSkyChart(lat, lon, when) {
   if (state.showConstellations && typeof CONSTELLATIONS !== 'undefined') {
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
-    ctx.strokeStyle = red ? '#7a2b2b' : (isDarkPair() ? '#555c6e' : '#b8bcc4');
+    ctx.strokeStyle = red ? '#7a2b2b' : (isDarkPair() ? '#6b6558' : '#cfc6b4');
     ctx.lineWidth = 1;
     for (const c of CONSTELLATIONS) {
       for (const line of c.lines) {
@@ -516,7 +516,7 @@ function drawSkyChart(lat, lon, when) {
   }
   // 星座名: 中心付近に表示。へび座（頭・尾で2件）は重複を避け1回だけ（結びの表示とは独立）
   if (state.showConstellationNames && typeof CONSTELLATIONS !== 'undefined') {
-    ctx.fillStyle = red ? '#b05a5a' : (isDarkPair() ? '#8a8f9e' : '#7a7f8c');
+    ctx.fillStyle = red ? '#c67f7f' : (isDarkPair() ? '#9a927f' : '#6f675a');
     ctx.font = '10px system-ui, sans-serif';
     const seen = new Set();
     for (const c of CONSTELLATIONS) {
@@ -532,7 +532,7 @@ function drawSkyChart(lat, lon, when) {
   }
   // 一等星: 惑星より小さい点（半径2.2）。表示時は名前も一緒に出す
   if (state.showStars && typeof BRIGHT_STARS !== 'undefined') {
-    ctx.fillStyle = red ? '#ffd7d7' : (isDarkPair() ? '#e8e8ea' : '#1c1c1e');
+    ctx.fillStyle = red ? '#eec2c2' : (isDarkPair() ? '#cfc8ba' : '#2e2a24');
     ctx.font = '10px system-ui, sans-serif';
     for (const s of BRIGHT_STARS) {
       const p = altAz(s.ra, s.dec, when, lat, lon);
@@ -549,10 +549,10 @@ function drawSkyChart(lat, lon, when) {
     if (p.alt < 0) { below.push(name); return; }
     body(name, p, color);
   };
-  drawBody('太陽', sunAltAz(when, lat, lon), red ? '#ff8a66' : (isDarkPair() ? '#ffd54d' : '#c49000'));
-  drawBody('月', moonAltAz(when, lat, lon), red ? '#ffb3b3' : (isDarkPair() ? '#b8c7e0' : '#4a6fa5'));
+  drawBody('太陽', sunAltAz(when, lat, lon), red ? '#e07a5a' : (isDarkPair() ? '#d9a94a' : '#9a5b1e'));
+  drawBody('月', moonAltAz(when, lat, lon), red ? '#d9a0a0' : (isDarkPair() ? '#8aa3c2' : '#3a5a8c'));
   if (state.showPlanets && typeof planetsAltAz === 'function') {
-    const planetColor = red ? '#ff9a9a' : (isDarkPair() ? '#e6c87a' : '#8a6d1a');
+    const planetColor = red ? '#e88a8a' : (isDarkPair() ? '#d9a94a' : '#9a5b1e');
     for (const p of planetsAltAz(when, lat, lon)) drawBody(p.name, p, planetColor);
   }
   ctx.fillStyle = dim;

@@ -1,17 +1,17 @@
 :root {
-  --ink: #1c1c1e; --dim: #6b6b70; --line: #d9d9de; --paper: #fff; --accent: #b56a00;
-  --sun: #b45309; --moon: #1d4ed8; --astro: #6d28d9;
-  --result-bg: #f4f4f6;
+  --ink: #2e2a24; --dim: #6f675a; --line: #d8d0c2; --paper: #f4efe7; --accent: #9a5b00;
+  --sun: #9a5b1e; --moon: #3a5a8c; --astro: #5f4a7a;
+  --result-bg: #eae3d8;
   color-scheme: light dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --ink: #e8e8ea; --dim: #9a9aa0; --line: #3a3a3e; --paper: #141416; --accent: #ffcf5c;
-    --sun: #fbbf24; --moon: #60a5fa; --astro: #a78bfa; --result-bg: #1e1e20; }
+  :root { --ink: #cfc8ba; --dim: #9a927f; --line: #37322b; --paper: #12100e; --accent: #d9a94a;
+    --sun: #d9a94a; --moon: #8aa3c2; --astro: #a08fb8; --result-bg: #1c1915; }
 }
 /* 赤色テーマ（夜間の天体観測用・暗順応を保つ赤中心）: 黒地に赤系のみ */
 :root[data-theme="red"] {
-  --ink: #ffd7d7; --dim: #d98c8c; --line: #5f1f1f; --paper: #0f0202; --accent: #ff4d4d;
-  --sun: #ff8a66; --moon: #ffb3b3; --astro: #ff6b6b; --result-bg: #1c0606;
+  --ink: #eec2c2; --dim: #c67f7f; --line: #5f1f1f; --paper: #120202; --accent: #ff4d4d;
+  --sun: #e07a5a; --moon: #d9a0a0; --astro: #d95f5f; --result-bg: #1c0606;
   color-scheme: dark;
 }
 :root[data-theme="red"] input, :root[data-theme="red"] button,
