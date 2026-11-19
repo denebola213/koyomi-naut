@@ -125,6 +125,22 @@ function skyWhen() {
   base.setMinutes(base.getMinutes() + (state.skyOffsetMin || 0));
   return base;
 }
+/* 現在時刻をスライダーオフセット（5分刻み）に変換する。
+ * 現在が指定日の範囲（指定日18時±18時間）外なら日付を今日に合わせる。 */
+function nowSkyOffsetMin(dateStr) {
+  const base = new Date(`${dateStr}T18:00:00`);
+  return Math.round((new Date() - base) / 60000 / 5) * 5;
+}
+function resetSkyToNow(forceToday) {
+  const today = todayStr();
+  if (forceToday) state.date = today;
+  let off = nowSkyOffsetMin(state.date || today);
+  if (off < -1080 || off > 1080) {
+    state.date = today;
+    off = nowSkyOffsetMin(today);
+  }
+  state.skyOffsetMin = Math.max(-1080, Math.min(1080, off));
+}
 function fmtSkyWhen(w) {
   const wd = ['日', '月', '火', '水', '木', '金', '土'][w.getDay()];
   return `${w.getFullYear()}-${String(w.getMonth() + 1).padStart(2, '0')}-${String(w.getDate()).padStart(2, '0')} ${String(w.getHours()).padStart(2, '0')}:${String(w.getMinutes()).padStart(2, '0')}（${wd}）`;
@@ -539,7 +555,7 @@ function drawSkyChart(lat, lon, when) {
   }
   ctx.fillStyle = dim;
   const belowTxt = below.length ? `${below.join('・')}は地平線下` : '太陽・月・惑星はすべて地平線上';
-  ctx.fillText(`${fmtSkyWhen(when)}・${belowTxt}`, 10, H - 10);
+  ctx.fillText(belowTxt, 10, H - 10);
 }
 
 /* ---------- イベント ---------- */
@@ -552,6 +568,8 @@ function init() {
   const toggle = $('themeToggle');
   if (toggle) toggle.addEventListener('click', () => { applyTheme(!isRedTheme()); render(); });
   state.date = state.date || todayStr();
+  // 空のようすの初期値は現在時刻（保存値より優先）。範囲外の日付は今日に合わせる
+  resetSkyToNow();
   $('dateInput').value = state.date;
   $('latInput').value = state.lat.toFixed(4);
   $('lonInput').value = state.lon.toFixed(4);
@@ -665,6 +683,14 @@ function init() {
     save();
     updateTimeLabels();
     if (state.view === 'sky') drawSkyChart(state.lat, state.lon, skyWhen());
+  });
+  // 「現在」ボタン: 日付を今日・時刻を現在時刻に戻す
+  $('nowBtn').addEventListener('click', () => {
+    resetSkyToNow(true);
+    $('dateInput').value = state.date;
+    $('timeSlider').value = state.skyOffsetMin;
+    save();
+    render();
   });
   $('planetToggle').addEventListener('change', e => { state.showPlanets = e.target.checked; save(); render(); });
   $('constellationToggle').addEventListener('change', e => { state.showConstellations = e.target.checked; save(); render(); });
