@@ -294,7 +294,7 @@ function drawTrajectory(lat, lon, date) {
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
  * 一等星は bright-stars.js（等級1.5以下22星）、黄道は黄道緯度0°の円（ラベルなし）、
- * 天の川は milky-way.js（帯の輪郭を半透明に塗る）。 */
+ * 天の川は milky-way.js（帯の輪郭線のみ）。 */
 /* 星座名の位置: 結びの点の球面平均（単位ベクトル平均）で中心を求める */
 let _constLabelCache = null;
 function constellationLabelPos(c) {
@@ -353,28 +353,22 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillText(name, x + 8, y + 4);
   };
-  // 天の川（帯の輪郭を半透明に塗る）: 地平線下で途切る。最下層に描く
+  // 天の川（帯の輪郭線のみ・塗らない）: 地平線下で途切る。最下層に描く
   if (state.showMilkyWay && typeof MILKY_WAY !== 'undefined') {
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
-    ctx.fillStyle = red ? 'rgba(255,150,150,0.14)' : (isDarkPair() ? 'rgba(200,205,220,0.20)' : 'rgba(150,155,170,0.28)');
+    ctx.strokeStyle = red ? 'rgba(255,150,150,0.45)' : (isDarkPair() ? 'rgba(200,205,220,0.55)' : 'rgba(150,155,170,0.65)');
+    ctx.lineWidth = 1;
     for (const ring of MILKY_WAY) {
-      // 地平線下で輪郭を断片化し、各断片を閉じて塗る（地平線下を跨ぐ弦を引かない）
-      let frag = [];
-      const flush = () => {
-        if (frag.length > 2) {
-          ctx.beginPath(); ctx.moveTo(frag[0][0], frag[0][1]);
-          for (let i = 1; i < frag.length; i++) ctx.lineTo(frag[i][0], frag[i][1]);
-          ctx.closePath(); ctx.fill();
-        }
-        frag = [];
-      };
+      ctx.beginPath();
+      let started = false;
       for (const [ra, dec] of ring) {
         const p = altAz(ra, dec, when, lat, lon);
-        if (p.alt < 0) { flush(); continue; }
-        frag.push(xy(p.az, p.alt));
+        if (p.alt < 0) { started = false; continue; }
+        const [px, py] = xy(p.az, p.alt);
+        if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
       }
-      flush();
+      ctx.stroke();
     }
     ctx.restore();
   }
