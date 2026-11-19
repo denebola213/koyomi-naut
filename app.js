@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true, starDisplay: 'name', showEcliptic: true, showMilkyWay: true, showConstellationNames: false };
+const state = { lat: 35.6812, lon: 139.7671, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true, showStars: true, showEcliptic: true, showMilkyWay: true, showConstellationNames: false };
 const isRedTheme = () => document.documentElement.dataset.theme === 'red';
 const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -36,7 +36,7 @@ function setPlace(lat, lon, label) {
   render();
 }
 function save() {
-  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations, starDisplay: state.starDisplay, showEcliptic: state.showEcliptic, showMilkyWay: state.showMilkyWay, showConstellationNames: state.showConstellationNames })); } catch (e) {}
+  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations, showStars: state.showStars, showEcliptic: state.showEcliptic, showMilkyWay: state.showMilkyWay, showConstellationNames: state.showConstellationNames })); } catch (e) {}
 }
 function load() {
   try {
@@ -52,7 +52,8 @@ function load() {
       if (s.view === 'sky' || s.view === 'events') state.view = s.view;
       if (typeof s.showPlanets === 'boolean') state.showPlanets = s.showPlanets;
       if (typeof s.showConstellations === 'boolean') state.showConstellations = s.showConstellations;
-      if (s.starDisplay === 'off' || s.starDisplay === 'pos' || s.starDisplay === 'name') state.starDisplay = s.starDisplay;
+      if (typeof s.showStars === 'boolean') state.showStars = s.showStars;
+      else if (s.starDisplay === 'off') state.showStars = false; // 旧形式: 一等星セレクト（off=非表示、pos/name=表示）からの移行
       if (typeof s.showEcliptic === 'boolean') state.showEcliptic = s.showEcliptic;
       if (typeof s.showMilkyWay === 'boolean') state.showMilkyWay = s.showMilkyWay;
       if (typeof s.showConstellationNames === 'boolean') state.showConstellationNames = s.showConstellationNames;
@@ -294,7 +295,7 @@ function drawTrajectory(lat, lon, date) {
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
  * 一等星は bright-stars.js（等級1.5以下22星）、黄道は黄道緯度0°の円（ラベルなし）、
- * 天の川は milky-way.js（帯の輪郭線のみ）。 */
+ * 天の川は milky-way.js（帯を円盤でクリップして半透明に塗る）。 */
 /* 星座名の位置: 結びの点の球面平均（単位ベクトル平均）で中心を求める */
 let _constLabelCache = null;
 function constellationLabelPos(c) {
@@ -311,6 +312,60 @@ function constellationLabelPos(c) {
   v = [ra, dec];
   _constLabelCache.set(c, v);
   return v;
+}
+/* 天の川の塗り: 輪郭ポリゴンを銀河座標 (l,b) に変換し、円盤内の格子点が帯の内側かを点内判定する。
+ * 投影面でポリゴンを直接 fill すると地平線下の経路で円盤内が膨らむため、銀河座標で判定して円盤内にだけ塗る（円盤クリップ相当）。 */
+function unitVec(raDeg, decDeg) {
+  const r = raDeg * Math.PI / 180, d = decDeg * Math.PI / 180;
+  return [Math.cos(d) * Math.cos(r), Math.cos(d) * Math.sin(r), Math.sin(d)];
+}
+let _milkyGalCache = null;
+function milkyGalPolys() {
+  if (_milkyGalCache) return _milkyGalCache;
+  const zg = unitVec(192.859508, 27.128336); // 北銀極 (J2000)
+  const xg = unitVec(266.405, -29.008);     // 銀河中心方向 (l=0,b=0)
+  const yg = [zg[1] * xg[2] - zg[2] * xg[1], zg[2] * xg[0] - zg[0] * xg[2], zg[0] * xg[1] - zg[1] * xg[0]];
+  const yn = Math.hypot(yg[0], yg[1], yg[2]);
+  const ygn = [yg[0] / yn, yg[1] / yn, yg[2] / yn];
+  const gal = v => [
+    Math.atan2(v[0] * ygn[0] + v[1] * ygn[1] + v[2] * ygn[2], v[0] * xg[0] + v[1] * xg[1] + v[2] * xg[2]) * 180 / Math.PI,
+    Math.asin(Math.max(-1, Math.min(1, v[0] * zg[0] + v[1] * zg[1] + v[2] * zg[2]))) * 180 / Math.PI,
+  ];
+  _milkyGalCache = MILKY_WAY.map(ring => {
+    const pts = [];
+    for (const [ra, dec] of ring) {
+      let [l, b] = gal(unitVec(ra, dec));
+      if (pts.length) { // l を連続させる（±180° の継ぎ目を跨ぐ輪郭用）
+        while (l - pts[pts.length - 1][0] > 180) l -= 360;
+        while (l - pts[pts.length - 1][0] < -180) l += 360;
+      }
+      pts.push([l, b]);
+    }
+    let lmin = Infinity, lmax = -Infinity, bmin = Infinity, bmax = -Infinity;
+    for (const [l, b] of pts) {
+      if (l < lmin) lmin = l; if (l > lmax) lmax = l;
+      if (b < bmin) bmin = b; if (b > bmax) bmax = b;
+    }
+    return { pts, lmin, lmax, bmin, bmax };
+  });
+  return _milkyGalCache;
+}
+function inMilkyGal(polys, l, b) {
+  for (const p of polys) {
+    if (b < p.bmin || b > p.bmax) continue;
+    for (const shift of [0, 360, -360]) {
+      const ll = l + shift;
+      if (ll < p.lmin || ll > p.lmax) continue;
+      let inside = false;
+      const pts = p.pts;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const xi = pts[i][0], yi = pts[i][1], xj = pts[j][0], yj = pts[j][1];
+        if ((yi > b) !== (yj > b) && ll < (xj - xi) * (b - yi) / (yj - yi) + xi) inside = !inside;
+      }
+      if (inside) return true;
+    }
+  }
+  return false;
 }
 function drawSkyChart(lat, lon, when) {
   const cv = $('skyChart');
@@ -353,10 +408,41 @@ function drawSkyChart(lat, lon, when) {
     ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
     ctx.fillText(name, x + 8, y + 4);
   };
-  // 天の川（帯の輪郭線のみ・塗らない）: 地平線下で途切る。最下層に描く
+  // 天の川: 円盤内の格子点を銀河座標で点内判定して半透明に塗る＋輪郭線。最下層に描く
   if (state.showMilkyWay && typeof MILKY_WAY !== 'undefined') {
+    const polys = milkyGalPolys();
+    const jd = julianDay(when), T = (jd - 2451545.0) / 36525;
+    let gmst = (280.46061837 + 360.98564736629 * (jd - 2451545) + 0.000387933 * T * T) % 360;
+    if (gmst < 0) gmst += 360;
+    const lst = (gmst + lon) * Math.PI / 180, latr = lat * Math.PI / 180;
+    const up = [Math.cos(latr) * Math.cos(lst), Math.cos(latr) * Math.sin(lst), Math.sin(latr)];
+    const north = [-Math.sin(latr) * Math.cos(lst), -Math.sin(latr) * Math.sin(lst), Math.cos(latr)];
+    const east = [-Math.sin(lst), Math.cos(lst), 0];
+    const zg = unitVec(192.859508, 27.128336), xg = unitVec(266.405, -29.008);
+    const ygRaw = [zg[1] * xg[2] - zg[2] * xg[1], zg[2] * xg[0] - zg[0] * xg[2], zg[0] * xg[1] - zg[1] * xg[0]];
+    const yn = Math.hypot(ygRaw[0], ygRaw[1], ygRaw[2]);
+    const yg = [ygRaw[0] / yn, ygRaw[1] / yn, ygRaw[2] / yn];
     ctx.save();
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.clip();
+    ctx.fillStyle = red ? 'rgba(255,150,150,0.14)' : (isDarkPair() ? 'rgba(200,205,220,0.20)' : 'rgba(150,155,170,0.28)');
+    const step = 6;
+    for (let gy = cy - R; gy <= cy + R; gy += step) {
+      for (let gx = cx - R; gx <= cx + R; gx += step) {
+        const dx = gx - cx, dy = gy - cy, r = Math.hypot(dx, dy);
+        if (r > R) continue;
+        const alt = (90 - r / R * 90) * Math.PI / 180;
+        const az = Math.atan2(-dx, -dy);
+        const ca = Math.cos(alt);
+        const v = [
+          east[0] * ca * Math.sin(az) + north[0] * ca * Math.cos(az) + up[0] * Math.sin(alt),
+          east[1] * ca * Math.sin(az) + north[1] * ca * Math.cos(az) + up[1] * Math.sin(alt),
+          east[2] * ca * Math.sin(az) + north[2] * ca * Math.cos(az) + up[2] * Math.sin(alt),
+        ];
+        const l = Math.atan2(v[0] * yg[0] + v[1] * yg[1] + v[2] * yg[2], v[0] * xg[0] + v[1] * xg[1] + v[2] * xg[2]) * 180 / Math.PI;
+        const b = Math.asin(Math.max(-1, Math.min(1, v[0] * zg[0] + v[1] * zg[1] + v[2] * zg[2]))) * 180 / Math.PI;
+        if (inMilkyGal(polys, l, b)) ctx.fillRect(gx - step / 2, gy - step / 2, step, step);
+      }
+    }
     ctx.strokeStyle = red ? 'rgba(255,150,150,0.45)' : (isDarkPair() ? 'rgba(200,205,220,0.55)' : 'rgba(150,155,170,0.65)');
     ctx.lineWidth = 1;
     for (const ring of MILKY_WAY) {
@@ -431,8 +517,8 @@ function drawSkyChart(lat, lon, when) {
     }
     ctx.font = '11px system-ui, sans-serif';
   }
-  // 一等星: 惑星より小さい点（半径2.2）。表示は 非表示 / 位置のみ / 名前
-  if (state.starDisplay !== 'off' && typeof BRIGHT_STARS !== 'undefined') {
+  // 一等星: 惑星より小さい点（半径2.2）。表示時は名前も一緒に出す
+  if (state.showStars && typeof BRIGHT_STARS !== 'undefined') {
     ctx.fillStyle = red ? '#ffd7d7' : (isDarkPair() ? '#e8e8ea' : '#1c1c1e');
     ctx.font = '10px system-ui, sans-serif';
     for (const s of BRIGHT_STARS) {
@@ -440,7 +526,7 @@ function drawSkyChart(lat, lon, when) {
       if (p.alt < 0) continue;
       const [x, y] = xy(p.az, p.alt);
       ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
-      if (state.starDisplay === 'name') ctx.fillText(s.name, x + 5, y + 3);
+      ctx.fillText(s.name, x + 5, y + 3);
     }
     ctx.font = '11px system-ui, sans-serif';
   }
@@ -573,7 +659,7 @@ function init() {
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
   $('planetToggle').checked = state.showPlanets;
   $('constellationToggle').checked = state.showConstellations;
-  $('starDisplay').value = state.starDisplay;
+  $('starToggle').checked = state.showStars;
   $('eclipticToggle').checked = state.showEcliptic;
   $('milkyWayToggle').checked = state.showMilkyWay;
   $('constellationNameToggle').checked = state.showConstellationNames;
@@ -587,7 +673,7 @@ function init() {
   });
   $('planetToggle').addEventListener('change', e => { state.showPlanets = e.target.checked; save(); render(); });
   $('constellationToggle').addEventListener('change', e => { state.showConstellations = e.target.checked; save(); render(); });
-  $('starDisplay').addEventListener('change', e => { state.starDisplay = e.target.value; save(); render(); });
+  $('starToggle').addEventListener('change', e => { state.showStars = e.target.checked; save(); render(); });
   $('eclipticToggle').addEventListener('change', e => { state.showEcliptic = e.target.checked; save(); render(); });
   $('milkyWayToggle').addEventListener('change', e => { state.showMilkyWay = e.target.checked; save(); render(); });
   $('constellationNameToggle').addEventListener('change', e => { state.showConstellationNames = e.target.checked; save(); render(); });
