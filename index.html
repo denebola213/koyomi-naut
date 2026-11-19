@@ -71,15 +71,6 @@
       <span class="note">時刻は端末のタイムゾーンで表示</span>
     </div>
   </section>
-
-  <section aria-labelledby="h-skyinput">
-    <h3 id="h-skyinput">表示</h3>
-    <div class="row">
-      <label><input id="planetToggle" type="checkbox" checked> 惑星を表示</label>
-      <label><input id="constellationToggle" type="checkbox" checked> 星座の結びを表示</label>
-    </div>
-    <p class="note">全天図の時刻は全天図パネル内のスライダーで指定します（指定日18時±18時間）。惑星・星座はモックでは未表示（後続PR）。</p>
-  </section>
   </section><!-- /入力ゾーン -->
 
   <!-- 結果ゾーン: 確定した条件と計算結果だけ。入力控件は持たない -->
@@ -99,7 +90,7 @@
 
     <div class="view-tabs" role="tablist" aria-label="結果の表示">
       <button type="button" role="tab" id="tab-events" aria-controls="panel-events" aria-selected="true" data-panel="panel-events">出没・薄明</button>
-      <button type="button" role="tab" id="tab-sky" aria-controls="panel-sky" aria-selected="false" tabindex="-1" data-panel="panel-sky">全天図</button>
+      <button type="button" role="tab" id="tab-sky" aria-controls="panel-sky" aria-selected="false" tabindex="-1" data-panel="panel-sky">空のようす</button>
     </div>
 
     <div role="tabpanel" id="panel-events" aria-labelledby="tab-events" class="view-panel">
@@ -129,13 +120,20 @@
 
     <div role="tabpanel" id="panel-sky" aria-labelledby="tab-sky" class="view-panel" hidden>
       <section aria-labelledby="h-sky">
-        <h3 id="h-sky">全天図（モック）</h3>
-        <canvas id="skyChart" height="420" aria-label="全天図（天頂を中心にした円盤）"></canvas>
+        <h3 id="h-sky">空のようす（モック）</h3>
+        <canvas id="skyChart" height="420" aria-label="空のようす（天頂を中心にした円盤）"></canvas>
         <div class="sky-time">
           <label for="timeSlider">時刻 <span id="skyTimeLabel">—</span></label>
           <input id="timeSlider" type="range" min="-1080" max="1080" step="5" value="180"
-                 aria-label="全天図の時刻（指定日18時からプラスマイナス18時間）">
+                 aria-label="空のようすの時刻（指定日18時からプラスマイナス18時間）">
           <div class="sky-time-range" aria-hidden="true"><span>前日 00:00</span><span>指定日 18:00</span><span>翌日 12:00</span></div>
+        </div>
+        <div class="sky-display">
+          <span class="sky-display-title">表示</span>
+          <div class="row">
+            <label><input id="planetToggle" type="checkbox" checked> 惑星を表示</label>
+            <label><input id="constellationToggle" type="checkbox" checked> 星座の結びを表示</label>
+          </div>
         </div>
         <p class="note">中央=天頂、外周=地平線、北を上・東を左（画面を上に向けて空と重ねたときの向き）。太陽・月は点とラベルで表示。惑星・星座の結びは後続PR。</p>
       </section>

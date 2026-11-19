@@ -33,9 +33,10 @@ leaked = [i for i in result_ids if f'id="{i}"' in inp]
 if leaked:
     problems.append(f'入力ゾーンに結果idが漏れている: {leaked}')
 # 結果ゾーンの入力控件（? ダイアログ起動ボタン moonHelpBtn とタブ切替ボタンは除外）
-# 全天図の時刻スライダー timeSlider は結果ゾーン内の例外（全天図パネルに近接させる指示のため許可）
+# 全天図（空のようす）の時刻スライダー timeSlider と表示切替（planetToggle/constellationToggle）は
+# 結果ゾーン内の例外（空のようすパネルに近接させる指示のため許可）
 ctrl = [i for kind, i in re.findall(r'<(input|button)[^>]*id="([^"]+)"', res)
-        if i not in ('moonHelpBtn', 'tab-events', 'tab-sky', 'timeSlider')]
+        if i not in ('moonHelpBtn', 'tab-events', 'tab-sky', 'timeSlider', 'planetToggle', 'constellationToggle')]
 if ctrl:
     problems.append(f'結果ゾーンに入力控件が漏れている: {ctrl}')
 

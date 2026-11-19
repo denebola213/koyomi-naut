@@ -114,7 +114,7 @@ function searchPlaces(rawQ) {
 }
 
 /* ---------- 描画 ---------- */
-// 全天図の参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
+// 空のようすの参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
 function skyWhen() {
   const base = new Date(`${state.date}T18:00:00`);
   base.setMinutes(base.getMinutes() + (state.skyOffsetMin || 0));
@@ -285,7 +285,7 @@ function drawTrajectory(lat, lon, date) {
   ctx.fillText('実線=太陽 / 破線=月（数字は時刻）', padL + 4, padT + 12);
 }
 
-/* 全天図（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
+/* 空のようす（モック）: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
  * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は既存 astro.js の sunAltAz/moonAltAz を使用。惑星・星座は後続PR。 */
@@ -370,7 +370,7 @@ function init() {
   });
   activateTab(tabs[0], false);
 
-  /* 結果ビュー切替（出没・薄明 / 全天図）。場所タブと同型 + ハッシュ保持 */
+  /* 結果ビュー切替（出没・薄明 / 空のようす）。場所タブと同型 + ハッシュ保持 */
   const viewTabs = [...document.querySelectorAll('.view-tabs [role="tab"]')];
   function activateView(tab, focus) {
     for (const t of viewTabs) {
@@ -445,7 +445,7 @@ function init() {
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; save(); render(); });
   $('planetToggle').checked = state.showPlanets;
   $('constellationToggle').checked = state.showConstellations;
-  // 全天図の時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
+  // 空のようすの時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
   $('timeSlider').value = state.skyOffsetMin;
   $('timeSlider').addEventListener('input', e => {
     state.skyOffsetMin = Number(e.target.value) || 0;
