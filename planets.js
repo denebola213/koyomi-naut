@@ -1,7 +1,8 @@
 "use strict";
 /* 惑星の位置（水星〜土星・低精度表示用途）
  * JPL「Approximate Positions of the Planets」Table 1 のケプラー軌道要素
- * （1800 AD — 2050 AD 対象、J2000 平均黄道・春分点基準）で計算する。
+ * （1800 AD — 2050 AD 対象、J2000 平均黄道・春分点基準）で計算し、
+ * 出力の黄経は一般歳差を加えて日付の平均春分点基準に揃える（sunEcliptic/moonEcliptic と同基準）。
  * 誤差の目安（同表）: 水星 15″ / 金星 20″ / 火星 40″ / 木星 400″ / 土星 600″（黄経）。
  * 計算は端末内で完結し、外部データの取得は行わない。
  * astro.js の julianDay / altAz / sunEcliptic を利用する（ブラウザでは同一グローバル、Node では require 側で束ねる）。
@@ -55,7 +56,12 @@ function keplerEcliptic(el, T) {
   };
 }
 
-/* 地心黄道座標（lon/lat: 度、dist: AU）を返す */
+/* 一般歳差（黄経）: 5029.0966″/ユリウス世紀 = 1.3969713°/世紀。
+ * 軌道要素は J2000 平均春分点基準だが、sunEcliptic()/moonEcliptic() は日付基準で計算しているため、
+ * 惑星だけ基準が古いと全天図で 2026年なら約 0.36° ずれる。地心黄経にこの1次近似を加えて日付基準に揃える。 */
+const PRECESS_LON_DEG_PER_CENTURY = 1.3969713;
+
+/* 地心黄道座標（lon/lat: 度、dist: AU）を返す。lon/lat は日付の平均春分点基準 */
 function planetEcliptic(name, date) {
   const p = PLANETS.find(x => x.name === name);
   if (!p) return null;
@@ -65,7 +71,7 @@ function planetEcliptic(name, date) {
   const x = hp.x - he.x, y = hp.y - he.y, z = hp.z - he.z;
   const dist = Math.hypot(x, y, z);
   return {
-    lon: norm360(Math.atan2(y, x) * 180 / Math.PI),
+    lon: norm360(Math.atan2(y, x) * 180 / Math.PI + PRECESS_LON_DEG_PER_CENTURY * T),
     lat: Math.asin(z / dist) * 180 / Math.PI,
     dist,
   };
