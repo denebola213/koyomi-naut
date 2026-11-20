@@ -33,8 +33,8 @@ leaked = [i for i in result_ids if f'id="{i}"' in inp]
 if leaked:
     problems.append(f'入力ゾーンに結果idが漏れている: {leaked}')
 # 結果ゾーンの入力控件（? ダイアログ起動ボタン moonHelpBtn とタブ切替ボタンは除外）
-# 全天図（空のようす）の時刻スライダー timeSlider・「現在」ボタン nowBtn と表示切替（planetToggle/constellationToggle/starToggle/eclipticToggle/milkyWayToggle/constellationNameToggle）は
-# 結果ゾーン内の例外（空のようすパネルに近接させる指示のため許可）
+# 全天図（星空のようす）の時刻スライダー timeSlider・「現在」ボタン nowBtn と表示切替（planetToggle/constellationToggle/starToggle/eclipticToggle/milkyWayToggle/constellationNameToggle）は
+# 結果ゾーン内の例外（星空のようすパネルに近接させる指示のため許可）
 ctrl = [i for kind, i in re.findall(r'<(input|button|select)[^>]*id="([^"]+)"', res)
         if i not in ('moonHelpBtn', 'skyHelpBtn', 'twilightHelpBtn', 'tab-events', 'tab-sky', 'timeSlider', 'nowBtn', 'planetToggle', 'constellationToggle', 'starToggle', 'eclipticToggle', 'milkyWayToggle', 'constellationNameToggle')]
 if ctrl:

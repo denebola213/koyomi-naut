@@ -166,7 +166,7 @@ input[type="time"] { min-width: 130px; }
 .event-details dd { margin: 0; font-variant-numeric: tabular-nums; }
 
 canvas#traj { width: 100%; height: 360px; border: 1px solid var(--line); display: block; }
-/* 空のようす: パネルの罫線まで全幅に広げる（フルブリード）。上側のパディング・見出し余白は最小に */
+/* 星空のようす: パネルの罫線まで全幅に広げる（フルブリード）。上側のパディング・見出し余白は最小に */
 #panel-sky { padding: 0; }
 #panel-sky > section { margin-top: 0; }
 #panel-sky h3 { margin: 6px 12px 4px; }

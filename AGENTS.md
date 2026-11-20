@@ -7,7 +7,7 @@
 
 | ファイル | 役割 |
 |---|---|
-| `index.html` | 画面構造（場所・日付・出没・薄明・軌道） |
+| `index.html` | 画面構造（入力ゾーン／結果ゾーンの2タブ: 出没・薄明・星空のようす） |
 | `app.js` | DOM 描画・イベント・localStorage 保存・GPS 取得 |
 | `astro.js` | 天文計算（Meeus 低精度）・出没・薄明・南中・月齢・四大相・遠近 |
 | `municipalities.js` | 市町村データ（code4fukui/localgovjp, CC BY） |
@@ -50,10 +50,15 @@
 - 距離の「遠近」は近点 363,300 km=0%・遠点 405,500 km=100% で正規化表示（`distanceRatioPct()`）。
   「？」ボタンで説明ポップアップ（`<dialog>`）。
 - 時間窓は指定日 00:00 〜 翌日日の出（`dayEvents()` の `windowEvents`）。南中は窓内での極大値探索。
+- 結果ゾーンはタブで「出没・薄明」（既定）と「星空のようす」（全天図）の2ビューに分ける。
+- ビューの表示名を変えるときは、タブ・見出し・`aria-label`・説明ダイアログ・`README.md`・
+  `.agents/skills/` の表記を同時に揃える。内部 ID（`tab-sky` / `panel-sky` / `skyChart`）・
+  ハッシュ（`#sky`）・`localStorage` キーは安定側なので変えない。
 
 ### キャッシュ・デプロイ
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（v48 現在）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在の世代は `sw.js` 先頭の値を参照。
+  ドキュメントに数字を固定しない——すぐ古くなるため）。
 - Service Worker は `/sw.js` を no-cache で返す（`_headers`）。
 - デプロイは Cloudflare Pages（Git 連携）。`main` への直接 push は禁止——
   **branch → PR → プレビュー URL で確認 → ユーザー OK → squash merge → 本番**。

@@ -119,7 +119,7 @@ function searchPlaces(rawQ) {
 }
 
 /* ---------- 描画 ---------- */
-// 空のようすの参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
+// 星空のようすの参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
 function skyWhen() {
   const base = new Date(`${state.date}T18:00:00`);
   base.setMinutes(base.getMinutes() + (state.skyOffsetMin || 0));
@@ -317,7 +317,7 @@ function drawTrajectory(lat, lon, date) {
   ctx.fillText('実線=太陽 / 破線=月（数字は時刻）', padL + 4, padT + 12);
 }
 
-/* 空のようす: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
+/* 星空のようす: 極射円盤。中心=天頂、外周=地平線。北を上・東を左。
  * 画面を上に向けて空と重ねたとき、東西が地図（上から見た図）と左右逆になるため
  * 東を左・西を右に置く（方位090°=東は左、270°=西は右）。
  * 太陽・月は astro.js、惑星は planets.js、星座の結びは constellations.js（線のみ）、
@@ -635,7 +635,7 @@ function init() {
   if (toggle) toggle.addEventListener('click', () => { applyTheme(!isRedTheme()); render(); });
   state.date = state.date || todayStr();
   syncMoonCalMonth();
-  // 空のようすの初期値は現在時刻（保存値より優先）。範囲外の日付は今日に合わせる
+  // 星空のようすの初期値は現在時刻（保存値より優先）。範囲外の日付は今日に合わせる
   resetSkyToNow();
   $('dateInput').value = state.date;
   $('latInput').value = state.lat.toFixed(4);
@@ -664,7 +664,7 @@ function init() {
   });
   activateTab(tabs[0], false);
 
-  /* 結果ビュー切替（出没・薄明 / 空のようす）。場所タブと同型 + ハッシュ保持 */
+  /* 結果ビュー切替（出没・薄明 / 星空のようす）。場所タブと同型 + ハッシュ保持 */
   const viewTabs = [...document.querySelectorAll('.view-tabs [role="tab"]')];
   function activateView(tab, focus) {
     for (const t of viewTabs) {
@@ -745,7 +745,7 @@ function init() {
   $('eclipticToggle').checked = state.showEcliptic;
   $('milkyWayToggle').checked = state.showMilkyWay;
   $('constellationNameToggle').checked = state.showConstellationNames;
-  // 空のようすの時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
+  // 星空のようすの時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
   $('timeSlider').value = state.skyOffsetMin;
   paintTimeSlider();
   $('timeSlider').addEventListener('input', e => {
@@ -814,7 +814,7 @@ function init() {
     });
   }
 
-  /* 「空のようす」説明ポップアップ */
+  /* 「星空のようす」説明ポップアップ */
   const skyHelpBtn = $('skyHelpBtn');
   const skyHelpDialog = $('skyHelpDialog');
   if (skyHelpBtn && skyHelpDialog) {
