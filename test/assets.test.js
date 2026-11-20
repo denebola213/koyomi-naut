@@ -27,6 +27,12 @@ test('sw.js: ASSETS の全ファイルが実在する', () => {
   }
 });
 
+test('index.html: CSS は <link rel=\"stylesheet\"> で読み込む（@import の直列 RTT を作らない） (#21)', () => {
+  const html = read('index.html');
+  assert.ok(!html.includes('@import'), 'CSS の @import が残っている');
+  assert.match(html, /<link rel="stylesheet" href="styles\.css">/, 'styles.css の link が無い');
+});
+
 test('sw.js: CACHE バージョンが skypwa-vN 形式', () => {
   const sw = read('sw.js');
   assert.match(sw, /const CACHE = 'skypwa-v\d+';/);
