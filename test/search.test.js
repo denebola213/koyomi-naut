@@ -25,12 +25,16 @@ function loadSearchPlaces() {
   const muniSrc = fs.readFileSync(path.join(root, 'municipalities.js'), 'utf8');
   const appSrc = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const fn = extractFunction(appSrc, 'searchPlaces');
+  // searchPlaces は索引ヘルパ（buildPlaceIndex 等）に依存するため、索引ブロックごと評価する
+  const blockStart = appSrc.indexOf('/* 地名検索の索引');
+  assert.ok(blockStart >= 0, '索引ブロックが見つからない');
+  const block = appSrc.slice(blockStart, appSrc.indexOf('function searchPlaces(rawQ)'));
   const sandbox = { console };
   sandbox.globalThis = sandbox;
   vm.createContext(sandbox);
   // municipalities.js は const MUNICIPALITIES = [...] なので、後に参照できるよう公開する
   vm.runInContext(`${muniSrc}\n;globalThis.MUNICIPALITIES = MUNICIPALITIES;`, sandbox, { filename: 'municipalities.js' });
-  vm.runInContext(`${fn}\n;globalThis.searchPlaces = searchPlaces;`, sandbox, { filename: 'app.js' });
+  vm.runInContext(`${block}\n${fn}\n;globalThis.searchPlaces = searchPlaces;`, sandbox, { filename: 'app.js' });
   return sandbox.searchPlaces;
 }
 
@@ -83,6 +87,8 @@ function loadOazaReady() {
   const appSrc = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const ensureFn = extractFunction(appSrc, 'ensureOaza');
   const readyFn = extractFunction(appSrc, 'onOazaReady');
+  // ensureOaza の onload は索引構築（ensurePlaceIndex）を呼ぶため、索引ブロックも評価する
+  const indexBlock = appSrc.slice(appSrc.indexOf('/* 地名検索の索引'), appSrc.indexOf('function searchPlaces(rawQ)'));
   const appended = [];
   const documentStub = {
     createElement: () => ({}),
@@ -94,6 +100,7 @@ function loadOazaReady() {
   vm.runInContext(`
     let oazaState = 'idle';
     let oazaWaiters = [];
+    ${indexBlock}
     ${ensureFn}
     ${readyFn}
     globalThis.__waiters = () => oazaWaiters;
