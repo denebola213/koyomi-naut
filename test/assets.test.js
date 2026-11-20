@@ -33,6 +33,33 @@ test('index.html: CSS は <link rel=\"stylesheet\"> で読み込む（@import �
   assert.match(html, /<link rel="stylesheet" href="styles\.css">/, 'styles.css の link が無い');
 });
 
+test('manifest: id があり、maskable は専用アイコンのみ、theme_color は既定テーマと一致 (#28)', () => {
+  const m = JSON.parse(read('manifest.webmanifest'));
+  assert.equal(m.id, './', 'id が無い');
+  assert.ok(m.start_url && m.scope);
+
+  // 同じサイズを any と maskable で兼用しない（セーフゾーンが異なるため）
+  const bySize = {};
+  for (const ic of m.icons) {
+    for (const p of ic.purpose.split(/\s+/)) {
+      const key = `${p}:${ic.sizes}`;
+      assert.ok(!bySize[key], `purpose=${p} sizes=${ic.sizes} が重複している`);
+      bySize[key] = ic.src;
+    }
+  }
+  const maskable = m.icons.filter(ic => ic.purpose.split(/\s+/).includes('maskable'));
+  assert.ok(maskable.length > 0, 'maskable アイコンが無い');
+  for (const ic of maskable) {
+    assert.match(ic.src, /maskable/, `maskable 専用ファイルでない: ${ic.src}`);
+  }
+
+  // theme_color は既定（ライト）テーマの --paper と一致させる
+  const css = read('styles.css');
+  const paper = css.match(/:root\s*\{[^}]*--paper:\s*(#[0-9a-fA-F]{6})/)[1].toLowerCase();
+  assert.equal(m.theme_color.toLowerCase(), paper, 'theme_color が既定テーマの地色と不一致');
+  assert.equal(m.background_color.toLowerCase(), paper, 'background_color が既定テーマの地色と不一致');
+});
+
 test('sw.js: CACHE バージョンが skypwa-vN 形式', () => {
   const sw = read('sw.js');
   assert.match(sw, /const CACHE = 'skypwa-v\d+';/);
