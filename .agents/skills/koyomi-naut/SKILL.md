@@ -55,6 +55,9 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 | 四大相（新月・上弦・満月・下弦） | `moonPhaseName(date)`（黄経差で交差時刻を探索） | 交差時刻 ±0.5 日の日に月齢横に括弧書き。それ以外は非表示 |
 | 距離の遠近 | `distanceRatioPct(m.dist)` | 近点 363,300 km=0%、遠点 405,500 km=100% で正規化表示。`?` ボタンで説明ポップアップ |
 
+- 結果ゾーンはタブで「出没・薄明」（既定）と「星空のようす」（全天図）に分ける。
+  表示名を変えるときは表示テキスト・`aria-label`・`README.md` を揃え、
+  内部 ID（`tab-sky` / `panel-sky` / `skyChart`）とハッシュ `#sky` は変えない。
 - 中間相名（「三日月〜半月」等）は表示しない。
 - 時間窓は指定日 00:00 〜 翌日日の出（`dayEvents()` の `windowEvents`）。
 - 新時刻を追加する場合は `{ time, label, cls }` を `windowEvents` に追加し時刻順ソート
@@ -62,7 +65,8 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 
 ## キャッシュ・SW
 
-- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在 v48）。
+- `sw.js` の `CACHE = 'skypwa-vN'` は全変更で上げる（現在の世代は `sw.js` 先頭の値を参照。
+  ここに数字を固定しない）。
 - `/sw.js` と静的アセットは `_headers` で no-cache 設定済み。
 - SW の責務はオフライン互換（ネットワーク優先・失敗時はキャッシュ）のみで、
   第三者へのデータ送信はしない。
