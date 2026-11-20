@@ -100,11 +100,10 @@ input[type="time"] { min-width: 130px; }
   color: var(--dim); font-size: 13px; line-height: 1; vertical-align: baseline;
   background: var(--paper);
 }
-/* インストール方法ボタン: 「？」の丸ボタンではなく文字ボタン */
+.install-note { margin: 8px 0 0; }
+/* インストール方法ボタン: 「？」の丸ボタンではなく文字ボタン。既定の button 様式（罫線・角丸）に色を合わせる */
 .install-btn {
-  width: auto; height: auto; margin-left: 8px; padding: 4px 10px;
-  border-radius: 4px; border-color: var(--line); color: var(--dim);
-  font-size: 13px; line-height: 1.4; vertical-align: baseline;
+  padding: 4px 10px; color: var(--dim); font-size: 13px; line-height: 1.4;
 }
 .install-btn:hover { color: var(--ink); border-color: var(--dim); }
 .help-dialog {
