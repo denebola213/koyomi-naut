@@ -1,5 +1,5 @@
 /* Sky PWA service worker: ネットワーク優先・失敗時にキャッシュ (オフライン対応) */
-const CACHE = 'skypwa-v67';
+const CACHE = 'skypwa-v68';
 const ASSETS = [
   './',
   'index.html',

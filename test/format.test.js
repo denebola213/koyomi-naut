@@ -67,3 +67,66 @@ test('fmtTime: 時刻のみを返す（死んだ翌日式が復活していな�
   assert.equal(astro.fmtTime(new Date(2026, 10, 30, 23, 5)), '23:05');
   assert.equal(astro.fmtTime(null), '—');
 });
+
+function loadDrawMoonPhaseInto(dpr) {
+  const sandbox = {
+    console,
+    isRedTheme: () => false,
+    isDarkPair: () => false,
+    SYNODIC: 29.530588853,
+    window: { devicePixelRatio: dpr },
+    Math,
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(`${extractFunction(appSrc, 'drawMoonPhaseInto')}\n;globalThis.drawMoonPhaseInto = drawMoonPhaseInto;`, sandbox, { filename: 'app.js' });
+  return sandbox.drawMoonPhaseInto;
+}
+
+function canvasStub() {
+  const calls = { setTransform: [], clearRect: [] };
+  const ctx = new Proxy({
+    setTransform: (a, b, c, d, e, f) => calls.setTransform.push([a, b, c, d, e, f]),
+    clearRect: (...a) => calls.clearRect.push(a),
+  }, {
+    get: (t, k) => (k in t ? t[k] : () => {}),
+    set: () => true,
+  });
+  const cv = { width: 0, height: 0, style: {}, getContext: () => ctx };
+  return { cv, calls };
+}
+
+test('drawMoonPhaseInto: devicePixelRatio に応じて canvas を高解像度化する (#26)', () => {
+  const draw = loadDrawMoonPhaseInto(2);
+  const { cv, calls } = canvasStub();
+  draw(cv, 14.7, 120);
+  assert.equal(cv.width, 240, '大図 width が DPR 倍になっていない');
+  assert.equal(cv.height, 240);
+  assert.equal(cv.style.width, '120px', 'CSS サイズが変わっている');
+  assert.deepEqual(calls.setTransform[0], [2, 0, 0, 2, 0, 0], '描画座標が CSS 画素に戻っていない');
+  assert.deepEqual(calls.clearRect[0], [0, 0, 120, 120], 'clearRect が CSS 座標でない');
+});
+
+test('drawMoonPhaseInto: 月齢カレンダーの小図（24px）も DPR 対応する (#26)', () => {
+  const draw = loadDrawMoonPhaseInto(2);
+  const { cv } = canvasStub();
+  draw(cv, 3.2, 24);
+  assert.equal(cv.width, 48);
+  assert.equal(cv.height, 48);
+  assert.equal(cv.style.width, '24px', 'セル内のレイアウトサイズが 24px から変わっている');
+});
+
+test('drawMoonPhaseInto: DPR は 2 で頭打ち、1 なら等倍 (#26)', () => {
+  const draw3 = loadDrawMoonPhaseInto(3);
+  const a = canvasStub();
+  draw3(a.cv, 20, 120);
+  assert.equal(a.cv.width, 240, 'DPR 上限 2 が効いていない');
+  assert.deepEqual(a.calls.setTransform[0], [2, 0, 0, 2, 0, 0]);
+
+  const draw1 = loadDrawMoonPhaseInto(1);
+  const b = canvasStub();
+  draw1(b.cv, 20, 120);
+  assert.equal(b.cv.width, 120);
+  assert.deepEqual(b.calls.setTransform[0], [1, 0, 0, 1, 0, 0]);
+});
+
