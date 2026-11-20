@@ -201,6 +201,93 @@ function searchPlaces(rawQ) {
   return b0.concat(b1, b2).slice(0, 30).map(id => placeRowById(idx, id));
 }
 
+/* ---------- 地名候補リスト（ARIA combobox + listbox、キーボード操作） (#25) ----------
+ * role="listbox" の子は role="option" である必要があるため、候補は <button> ではなく
+ * フォーカス不能な div[role=option] とし、入力欄にフォーカスを残したまま
+ * aria-activedescendant で現在位置を提示する。矢印キー / Enter / Escape に対応。 */
+let placeResults = [];
+let placeActive = -1;
+
+/* 候補件数の変化を読み上げに通知（listbox 自体に live を付けない: 名前の二重読み上げを避ける） */
+function announcePlaceResults(count) {
+  const status = $('placeStatus');
+  if (status) status.textContent = count ? `地名の候補 ${count} 件` : '';
+}
+
+function renderPlaceResults(res, note) {
+  placeResults = res || [];
+  placeActive = -1;
+  const list = $('placeResults');
+  const box = $('placeSearch');
+  const noteEl = $('placeSearchNote');
+  if (noteEl) { noteEl.textContent = note || ''; noteEl.hidden = !note; }
+  if (list) {
+    list.innerHTML = '';
+    placeResults.forEach((r, i) => {
+      const o = document.createElement('div');
+      o.id = `place-opt-${i}`;
+      o.className = 'result';
+      o.setAttribute('role', 'option');
+      o.setAttribute('aria-selected', 'false');
+      o.textContent = r.sub ? `${r.label}（${r.sub}）` : r.label;
+      // マウス操作でも入力欄からフォーカスを奪わない（選択後に body へフォーカスが落ちる不具合の回避）
+      o.addEventListener('mousedown', e => e.preventDefault());
+      o.addEventListener('click', () => selectPlaceResult(i));
+      list.appendChild(o);
+    });
+  }
+  if (box) {
+    box.setAttribute('aria-expanded', placeResults.length ? 'true' : 'false');
+    box.removeAttribute('aria-activedescendant');
+  }
+  announcePlaceResults(placeResults.length);
+}
+
+function setPlaceActive(i) {
+  if (!placeResults.length) return;
+  placeActive = Math.max(0, Math.min(placeResults.length - 1, i));
+  const list = $('placeResults');
+  if (list) {
+    for (let k = 0; k < list.children.length; k++) {
+      list.children[k].setAttribute('aria-selected', k === placeActive ? 'true' : 'false');
+    }
+    const el = list.children[placeActive];
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest' });
+  }
+  const box = $('placeSearch');
+  if (box) box.setAttribute('aria-activedescendant', `place-opt-${placeActive}`);
+}
+
+function selectPlaceResult(i) {
+  const r = placeResults[i];
+  if (!r) return;
+  setPlace(r.lat, r.lon, r.label);
+  const box = $('placeSearch');
+  if (box) { box.value = ''; if (box.focus) box.focus(); }
+  renderPlaceResults([]);
+}
+
+function placeKeydown(e) {
+  if (e.key === 'ArrowDown') {
+    if (!placeResults.length) return;
+    e.preventDefault();
+    setPlaceActive(placeActive + 1);
+  } else if (e.key === 'ArrowUp') {
+    if (!placeResults.length) return;
+    e.preventDefault();
+    setPlaceActive(placeActive <= 0 ? 0 : placeActive - 1);
+  } else if (e.key === 'Enter') {
+    if (placeActive < 0) return;
+    e.preventDefault();
+    selectPlaceResult(placeActive);
+  } else if (e.key === 'Escape') {
+    if (!placeResults.length) return;
+    e.preventDefault();
+    renderPlaceResults([]);
+  }
+}
+
+
 /* ---------- 描画 ---------- */
 // 星空のようすの参照時刻: 指定日18時 + スライダーオフセット（±18時間、5分刻み）
 function skyWhen() {
@@ -785,30 +872,22 @@ function init() {
   const hashView = location.hash === '#sky' ? 'sky' : (location.hash === '#events' ? 'events' : state.view);
   activateView(viewTabs.find(t => t.dataset.panel === (hashView === 'sky' ? 'panel-sky' : 'panel-events')) || viewTabs[0], false);
 
-  const box = $('placeSearch'), list = $('placeResults');
+  const box = $('placeSearch');
   let searchTimer = null;
   function runSearch() {
     const q = box.value;
-    if (!q.trim()) { list.innerHTML = ''; return; }
+    if (!q.trim()) { renderPlaceResults([]); return; }
     if (oazaState !== 'ready' && oazaState !== 'error') {
       onOazaReady(runSearch);
-      list.innerHTML = '';
-      const p = document.createElement('p');
-      p.className = 'note';
-      p.textContent = '大字・小字データを読込中…（市町村はすぐ表示されます）';
-      list.appendChild(p);
+      renderPlaceResults([], '大字・小字データを読込中…（市町村はすぐ表示されます）');
       return;
     }
-    const res = searchPlaces(q);
-    list.innerHTML = '';
-    for (const r of res) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.className = 'result';
-      b.textContent = r.sub ? `${r.label}（${r.sub}）` : r.label;
-      b.addEventListener('click', () => { setPlace(r.lat, r.lon, r.label); box.value = ''; list.innerHTML = ''; });
-      list.appendChild(b);
-    }
+    renderPlaceResults(searchPlaces(q));
   }
+  // 入力欄にフォーカスを残したまま上下キー/Enter/Escape で候補を操作する
+  box.addEventListener('keydown', placeKeydown);
+  // フォーカスが入力欄から離れたら候補を閉じる（候補の mousedown は preventDefault 済みなので誤発火しない）
+  box.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== box) renderPlaceResults([]); }, 0));
   box.addEventListener('input', () => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(runSearch, 120);

@@ -39,9 +39,13 @@
     <div role="tabpanel" id="panel-place" aria-labelledby="tab-place" class="place-panel">
       <div class="row">
         <input id="placeSearch" type="search" inputmode="search" autocomplete="off"
-               placeholder="地名を検索（例: 千代田区 / 霞が関 / かすみがせき）" aria-label="地名検索">
+               placeholder="地名を検索（例: 千代田区 / 霞が関 / かすみがせき）" aria-label="地名検索"
+               role="combobox" aria-expanded="false" aria-controls="placeResults"
+               aria-autocomplete="list" aria-describedby="placeStatus">
       </div>
       <div id="placeResults" class="results" role="listbox" aria-label="地名候補"></div>
+      <p id="placeSearchNote" class="note" hidden></p>
+      <p id="placeStatus" class="sr-only" role="status" aria-live="polite"></p>
     </div>
 
     <div role="tabpanel" id="panel-gps" aria-labelledby="tab-gps" class="place-panel" hidden>

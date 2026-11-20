@@ -16,6 +16,14 @@ problems = []
 if missing:
     problems.append(f'JS参照でHTMLに無いid: {missing}')
 
+# aria-controls / aria-labelledby / aria-describedby の参照先が実在すること (#25)
+# aria-activedescendant は JS が実行時に設定するため静的検査の対象外
+for attr in ('aria-controls', 'aria-labelledby', 'aria-describedby'):
+    for ref in re.findall(rf'{attr}="([^"]+)"', html):
+        for tok in ref.split():
+            if tok not in ids_html:
+                problems.append(f'{attr} の参照先 id が HTML に無い: {tok}')
+
 # ゾーン抽出（class="zone zone-input" / "zone-result" の開始から次のゾーン or </main> まで）
 def zone(name):
     m = re.search(rf'class="zone {name}"', html)
