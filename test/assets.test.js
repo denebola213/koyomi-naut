@@ -62,3 +62,23 @@ test('municipalities.js: 全行が [pref, city, kana, lat, lon] 形状で座標�
   assert.ok(chiyoda, '千代田区が無い');
   assert.ok(chiyoda[3] > 35 && chiyoda[3] < 36 && chiyoda[4] > 139 && chiyoda[4] < 140);
 });
+
+test('_headers: JS/CSS はワイルドカードでなく明示パスで no-cache になっている (#20)', () => {
+  const headers = read('_headers');
+  assert.ok(!headers.includes('/*.js') && !headers.includes('/*.css'), '拡張子ワイルドカードが残っている');
+  const targets = ['sw.js', 'index.html', 'app.js', 'astro.js', 'planets.js', 'constellations.js', 'bright-stars.js', 'milky-way.js', 'municipalities.js', 'oaza.js', 'styles.css', 'manifest.webmanifest'];
+  for (const f of targets) {
+    // パス行から次の空行まで（宣言ブロック）の中に no-cache があること
+    const re = new RegExp(`^/${f}\\n((?:  .*\\n)+)`, 'm');
+    const m = headers.match(re);
+    assert.ok(m && m[1].includes('Cache-Control: no-cache'), `/${f} の no-cache 宣言が _headers に無い`);
+  }
+});
+
+test('sw.js: install は部分失敗に耐える（allSettled） (#23)', () => {
+  const sw = read('sw.js');
+  assert.ok(!sw.includes('addAll(ASSETS)'), 'addAll による全か無かが残っている');
+  assert.ok(sw.includes('Promise.allSettled'), 'Promise.allSettled が無い');
+  assert.ok(sw.includes('precache: all failed'), '全滅時のみ失敗する条件が無い');
+  assert.ok(sw.includes('console.warn'), '失敗 URL の警告が無い');
+});

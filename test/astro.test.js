@@ -44,6 +44,16 @@ test('moonEcliptic: 距離は近点〜遠点の近傍、照度は 0..1', () => {
   assert.ok(m.lat >= -6 && m.lat <= 6);
 });
 
+test('moonEcliptic: 月黄経が外部暦 (DE440s) と ±0.1° で一致する (2026-11-20 12:00 JST)', () => {
+  // #18: 楕円補正 6.289 sin M′ 等の欠落は最大 6.4° のずれを生む。絶対値を固定する。
+  const lon = moonEcliptic(new Date(2026, 10, 20, 12, 0, 0)).lon;
+  assert.ok(Math.abs(lon - 358.42) < 0.1, `lon=${lon}`);
+});
+
+test('moonPhaseName: 満月 2026-09-27 にラベルを返す (#18)', () => {
+  assert.equal(moonPhaseName(new Date(2026, 8, 27, 12)), '満月');
+});
+
 test('sunAltAz/moonAltAz: 高度は -90..90、方位は 0..360', () => {
   const t = new Date(2026, 5, 21, 12, 0, 0);
   for (const p of [sunAltAz(t, LAT, LON), moonAltAz(t, LAT, LON)]) {
@@ -155,9 +165,9 @@ test('phaseAngle: 0..360 の範囲', () => {
 
 test('moonPhaseName/quarterCrossing: 四大相の日はラベルが返り、交差時刻が位相角と一致する', () => {
   // 2026年1月の既知の四大相付近の日
-  assert.equal(moonPhaseName(new Date(2026, 0, 4, 12)), '満月');
+  assert.equal(moonPhaseName(new Date(2026, 0, 3, 12)), '満月');
   assert.equal(moonPhaseName(new Date(2026, 0, 11, 12)), '下弦');
-  assert.equal(moonPhaseName(new Date(2026, 0, 18, 12)), '新月');
+  assert.equal(moonPhaseName(new Date(2026, 0, 19, 12)), '新月');
   assert.equal(moonPhaseName(new Date(2026, 0, 26, 12)), '上弦');
   // 四大相から離れた日は空文字
   assert.equal(moonPhaseName(new Date(2026, 0, 8, 12)), '');
@@ -173,8 +183,19 @@ test('distanceRatioPct: 近点0%・遠点100%・中点50%', () => {
   assert.equal(distanceRatioPct(PERIGEE_KM), 0);
   assert.equal(distanceRatioPct(APOGEE_KM), 100);
   assert.equal(distanceRatioPct((PERIGEE_KM + APOGEE_KM) / 2), 50);
-  assert.equal(PERIGEE_KM, 363300);
-  assert.equal(APOGEE_KM, 405500);
+  assert.equal(PERIGEE_KM, 356500);
+  assert.equal(APOGEE_KM, 406700);
+});
+
+test('distanceRatioPct: 400日走査で 0..100 に収まる (#19)', () => {
+  for (let i = 0; i < 400; i++) {
+    const dist = moonEcliptic(new Date(2026, 0, 1 + i, 12)).dist;
+    const pct = distanceRatioPct(dist);
+    assert.ok(pct >= 0 && pct <= 100, `i=${i} dist=${dist} pct=${pct}`);
+  }
+  // clamp: 範囲外の距離でも 0..100 を外れない
+  assert.equal(distanceRatioPct(PERIGEE_KM - 10000), 0);
+  assert.equal(distanceRatioPct(APOGEE_KM + 10000), 100);
 });
 
 test('toDMS: 緯度・経度の表記と桁上がり', () => {

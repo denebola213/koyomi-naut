@@ -83,9 +83,9 @@ function ensureOaza() {
   document.head.appendChild(s);
 }
 function onOazaReady(cb) {
-  if (oazaState === 'ready') cb();
-  else if (oazaState === 'loading') oazaWaiters.push(cb);
-  else { ensureOaza(); oazaWaiters.push(cb); }
+  if (oazaState === 'ready') { cb(); return; }
+  if (oazaState !== 'loading') ensureOaza();
+  if (!oazaWaiters.includes(cb)) oazaWaiters.push(cb);
 }
 
 function searchPlaces(rawQ) {
@@ -704,6 +704,7 @@ function init() {
       p.className = 'note';
       p.textContent = '大字・小字データを読込中…（市町村はすぐ表示されます）';
       list.appendChild(p);
+      return;
     }
     const res = searchPlaces(q);
     list.innerHTML = '';
