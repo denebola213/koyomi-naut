@@ -149,6 +149,15 @@ function updateTimeLabels() {
   const label = fmtSkyWhen(skyWhen());
   setText('skyTimeLabel', label);
 }
+/* スライダーの選択側の塗り幅（--range-fill）。WebKit の軌道はこの変数で塗るため、
+   初期値・ドラッグ・「現在」ボタンのいずれの後でも呼ぶ */
+function paintTimeSlider() {
+  const el = $('timeSlider');
+  if (!el) return;
+  const min = Number(el.min), max = Number(el.max), val = Number(el.value);
+  const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+  el.style.setProperty('--range-fill', pct.toFixed(2) + '%');
+}
 function render() {
   const { lat, lon, date } = state;
   $('dmsLat').textContent = toDMS(lat, 'N', 'S');
@@ -738,8 +747,10 @@ function init() {
   $('constellationNameToggle').checked = state.showConstellationNames;
   // 空のようすの時刻スライダー: 指定日18時±18時間（-1080〜+1080分、5分刻み）。ドラッグ中も即時再描画
   $('timeSlider').value = state.skyOffsetMin;
+  paintTimeSlider();
   $('timeSlider').addEventListener('input', e => {
     state.skyOffsetMin = Number(e.target.value) || 0;
+    paintTimeSlider();
     save();
     updateTimeLabels();
     if (state.view === 'sky') drawSkyChart(state.lat, state.lon, skyWhen());
@@ -750,6 +761,7 @@ function init() {
     $('dateInput').value = state.date;
     syncMoonCalMonth();
     $('timeSlider').value = state.skyOffsetMin;
+    paintTimeSlider();
     save();
     render();
   });
