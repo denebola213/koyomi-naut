@@ -828,6 +828,20 @@ function init() {
     });
   }
 
+  /* 「インストール方法」説明ポップアップ */
+  const installHelpBtn = $('installHelpBtn');
+  const installHelpDialog = $('installHelpDialog');
+  if (installHelpBtn && installHelpDialog) {
+    installHelpBtn.addEventListener('click', () => {
+      if (typeof installHelpDialog.showModal === 'function') installHelpDialog.showModal();
+      else installHelpDialog.setAttribute('open', '');
+    });
+    installHelpDialog.addEventListener('click', e => {
+      const r = installHelpDialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) installHelpDialog.close();
+    });
+  }
+
   window.addEventListener('resize', () => {
     if (state.view === 'sky') drawSkyChart(state.lat, state.lon, skyWhen());
     else drawTrajectory(state.lat, state.lon, state.date);
