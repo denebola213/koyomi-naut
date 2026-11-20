@@ -36,11 +36,10 @@ body {
 .zone-input h3, .zone-result h3 { font-size: 16px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); font-weight: 650; }
 .zone-result > section { margin-top: 24px; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
-input, button, select {
+input, button {
   font: inherit; color: inherit; background: var(--paper);
   border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
 }
-select { padding: 5px 8px; font-size: 13px; }
 input[type="search"] { flex: 1 1 280px; }
 input[type="date"] { min-width: 160px; }
 input[type="decimal"] { width: 110px; }
@@ -81,7 +80,6 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .place-panel, .view-panel { border: 1px solid var(--line); border-top: 0; padding: 12px; margin: 0 0 4px; }
 .place-panel[hidden], .view-panel[hidden] { display: none; }
 .view-panel > section { margin-top: 0; }
-input[type="time"] { min-width: 130px; }
 .results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .results .result { display: block; width: 100%; text-align: left; }
 
