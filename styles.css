@@ -10,7 +10,7 @@
 }
 /* 赤色テーマ（夜間の天体観測用・暗順応を保つ赤中心）: 黒地に赤系のみ */
 :root[data-theme="red"] {
-  --ink: #eec2c2; --dim: #c67f7f; --line: #5f1f1f; --paper: #120202; --accent: #ff4d4d;
+  --ink: #eec2c2; --dim: #c67f7f; --line: #5f1f1f; --paper: #120202; --accent: #de6b6b;
   --sun: #e07a5a; --moon: #d9a0a0; --astro: #d95f5f; --result-bg: #1c0606;
   color-scheme: dark;
 }
