@@ -61,3 +61,23 @@ test('keplerEcliptic: 有限の直交座標を返す', () => {
     assert.ok(Math.abs(r - el.a) / el.a < 0.25, `${el.name} r=${r} a=${el.a}`);
   }
 });
+
+test('planetEcliptic: 黄経が DE440s の日付基準フレームと ±0.1° で一致する (#27)', () => {
+  const p = loadPlanets();
+  // 参照値: DE440s を skyfield で評価、ecliptic_latlon(epoch='date')、UTC 12:00 の地心視黄経。
+  // 歳差補正が無い実装では 2026年で約 -0.30〜-0.38° ずれ、このテストが落ちる。
+  // 残差（±0.01〜0.08°）は光行差・光行時間を解いていないことと、土星の級数誤差 600″ による。
+  const ref = {
+    '2026-01-05T12:00:00.000Z': { 水星: 275.576, 金星: 284.868, 火星: 286.143, 木星: 110.762, 土星: 356.445 },
+    '2026-11-20T12:00:00.000Z': { 水星: 218.703, 金星: 203.677, 火星: 147.735, 木星: 146.213, 土星: 8.306 },
+  };
+  const wrap = d => ((d + 540) % 360) - 180;
+  for (const [iso, exp] of Object.entries(ref)) {
+    const t = new Date(iso);
+    for (const [name, refLon] of Object.entries(exp)) {
+      const got = p.planetEcliptic(name, t).lon;
+      const diff = Math.abs(wrap(got - refLon));
+      assert.ok(diff < 0.1, `${name} ${iso}: got=${got.toFixed(3)} ref=${refLon} diff=${diff.toFixed(3)}`);
+    }
+  }
+});
