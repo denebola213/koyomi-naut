@@ -73,6 +73,7 @@ function ensureOaza() {
   s.src = 'oaza.js';
   s.onload = () => {
     oazaState = 'ready';
+    ensurePlaceIndex(); // 入力前に索引構築（約190ms）を済ませ、最初のキー入力を待たせない
     for (const cb of oazaWaiters) cb();
     oazaWaiters = [];
   };
@@ -88,34 +89,116 @@ function onOazaReady(cb) {
   if (!oazaWaiters.includes(cb)) oazaWaiters.push(cb);
 }
 
+/* 地名検索の索引（#22）: 全行を1本の文字列に連結し、行頭オフセットから該当行を引く。
+ * 1行ずつ startsWith/includes を呼ぶと 27.7万行を毎キー入力で走査して数十ms かかる。
+ * 初回に1度だけ索引を作り（約190ms・+14MB）、以降はネイティブの indexOf だけを回す。
+ * 判定の優先順位（前方一致 > 全体の前方一致 > 部分一致）と並び順は従来どおり。 */
+let placeIndex = null;
+const PLACE_SEP = String.fromCharCode(10); // 索引文字列の区切り（地名に現れない制御文字）
+
+function buildPlaceIndex(withOaza) {
+  const s0 = [], s0k = [], s1 = [], s1k = []; // 0/1 = 判定バケット、k = かな側
+  const muni = typeof MUNICIPALITIES !== 'undefined' ? MUNICIPALITIES : [];
+  for (const [pref, city, kana] of muni) {
+    s0.push(city); s0k.push(kana); s1.push(pref + ' ' + city); s1k.push(pref + ' ' + kana);
+  }
+  const muniN = s0.length;
+  if (withOaza) {
+    for (const [ci, oaza, kana, koaza] of OAZA) {
+      const [pref, city, cityKana] = OAZA_CITIES[ci];
+      const rest = oaza + (koaza ? ' ' + koaza : '');
+      s0.push(rest); s0k.push(kana); s1.push(`${pref} ${city} ${rest}`); s1k.push(`${cityKana} ${kana}`);
+    }
+  }
+  // 区切りで連結した1本の文字列 + 各行の開始オフセット。
+  // 先頭にも区切りを置き、全行が「区切りの直後」から始まるようにする（行頭一致の検索用）。
+  const mk = arr => {
+    const H = PLACE_SEP + arr.join(PLACE_SEP);
+    const offs = new Uint32Array(arr.length);
+    let p = 1;
+    for (let i = 0; i < arr.length; i++) { offs[i] = p; p += arr[i].length + 1; }
+    return { H, offs };
+  };
+  return { muniN, withOaza, total: s0.length, b0: mk(s0), b0k: mk(s0k), b1: mk(s1), b1k: mk(s1k) };
+}
+
+/* オフセット位置を含む行の番号（offs は昇順） */
+function placeRowIndexAt(offs, pos) {
+  let lo = 0, hi = offs.length - 1, ans = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (offs[mid] <= pos) { ans = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  return ans;
+}
+
+function ensurePlaceIndex() {
+  const withOaza = typeof OAZA !== 'undefined' && typeof OAZA_CITIES !== 'undefined';
+  if (placeIndex && placeIndex.withOaza === withOaza) return placeIndex;
+  placeIndex = buildPlaceIndex(withOaza); // 大字データの到着前後で作り直す
+  return placeIndex;
+}
+
+/* indexOf のヒットを行番号の昇順で返すカーソル。
+ * offAdj=1 は行頭一致（区切り文字 + q を探し、その直後が行頭）、offAdj=0 は部分一致 */
+function placeHitCursor(pair, needle, offAdj) {
+  return {
+    pos: -1,
+    next() {
+      const p = pair.H.indexOf(needle, this.pos + 1);
+      if (p < 0) return undefined;
+      this.pos = p;
+      return placeRowIndexAt(pair.offs, p + offAdj);
+    },
+  };
+}
+
+/* 2本の昇順カーソルを併合し、重複行と除外行を落として先頭 limit 行を返す */
+function mergePlaceHits(cursorA, cursorB, exclude, limit) {
+  const out = [];
+  let a = cursorA.next(), b = cursorB.next(), last = -1;
+  while (out.length < limit && (a !== undefined || b !== undefined)) {
+    let id;
+    if (b === undefined || (a !== undefined && a <= b)) {
+      id = a; a = cursorA.next();
+      if (b !== undefined && b === id) b = cursorB.next();
+    } else {
+      id = b; b = cursorB.next();
+    }
+    if (id === last) continue; // 同じ行で複数ヒット
+    last = id;
+    if (exclude && exclude.has(id)) continue;
+    out.push(id);
+  }
+  return out;
+}
+
+function placeRowById(idx, id) {
+  if (id < idx.muniN) {
+    const [pref, city, kana, lat, lon] = MUNICIPALITIES[id];
+    return { label: `${pref} ${city}`, sub: kana, lat, lon };
+  }
+  const [ci, oaza, kana, koaza, lat, lon] = OAZA[id - idx.muniN];
+  const [pref, city] = OAZA_CITIES[ci];
+  const rest = oaza + (koaza ? ' ' + koaza : '');
+  return { label: `${pref} ${city} ${rest}`, sub: kana, lat, lon };
+}
+
 function searchPlaces(rawQ) {
   const q = rawQ.trim();
   if (!q) return [];
   // カナ照合用: カタカナ入力をひらがなに正規化（地名中の「ケ」等の漢字照合は元の q を使う）
   const qK = q.replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
-  const buckets = [[], [], []];
-  const push = (bucket, item) => { if (buckets[bucket].length < 30) buckets[bucket].push(item); };
-  const classify = (name, kana, full, fullK) => {
-    if (name.startsWith(q) || kana.startsWith(qK)) return 0;
-    if (full.startsWith(q) || fullK.startsWith(qK)) return 1;
-    if (full.includes(q) || fullK.includes(qK)) return 2;
-    return -1;
-  };
-  for (const [pref, city, kana, lat, lon] of MUNICIPALITIES) {
-    const full = pref + ' ' + city, fullK = pref + ' ' + kana;
-    const b = classify(city, kana, full, fullK);
-    if (b >= 0) push(b, { label: `${pref} ${city}`, sub: kana, lat, lon });
-  }
-  if (typeof OAZA !== 'undefined' && typeof OAZA_CITIES !== 'undefined') {
-    for (const [ci, oaza, kana, koaza, lat, lon] of OAZA) {
-      const [pref, city, cityKana] = OAZA_CITIES[ci];
-      const rest = oaza + (koaza ? ' ' + koaza : '');
-      const full = `${pref} ${city} ${rest}`;
-      const b = classify(rest, kana, full, `${cityKana} ${kana}`);
-      if (b >= 0) push(b, { label: full, sub: kana, lat, lon });
-    }
-  }
-  return buckets[0].concat(buckets[1], buckets[2]).slice(0, 30);
+  const idx = ensurePlaceIndex();
+  if (!idx || !idx.total) return [];
+  const b0 = mergePlaceHits(placeHitCursor(idx.b0, PLACE_SEP + q, 1), placeHitCursor(idx.b0k, PLACE_SEP + qK, 1), null, 30);
+  const used = new Set(b0);
+  const b1 = mergePlaceHits(placeHitCursor(idx.b1, PLACE_SEP + q, 1), placeHitCursor(idx.b1k, PLACE_SEP + qK, 1), used, 30);
+  for (const id of b1) used.add(id);
+  const b2 = b0.length + b1.length < 30
+    ? mergePlaceHits(placeHitCursor(idx.b1, q, 0), placeHitCursor(idx.b1k, qK, 0), used, 30)
+    : [];
+  return b0.concat(b1, b2).slice(0, 30).map(id => placeRowById(idx, id));
 }
 
 /* ---------- 描画 ---------- */
