@@ -5,14 +5,35 @@
 /index.html
   Cache-Control: no-cache
 
+/app.js
+  Cache-Control: no-cache
+
+/astro.js
+  Cache-Control: no-cache
+
+/planets.js
+  Cache-Control: no-cache
+
+/constellations.js
+  Cache-Control: no-cache
+
+/bright-stars.js
+  Cache-Control: no-cache
+
+/milky-way.js
+  Cache-Control: no-cache
+
+/municipalities.js
+  Cache-Control: no-cache
+
+/oaza.js
+  Cache-Control: no-cache
+
+/styles.css
+  Cache-Control: no-cache
+
 /manifest.webmanifest
   Content-Type: application/manifest+json
-  Cache-Control: no-cache
-
-/*.js
-  Cache-Control: no-cache
-
-/*.css
   Cache-Control: no-cache
 
 /icons/*

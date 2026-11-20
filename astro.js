@@ -34,7 +34,8 @@ function moonEcliptic(date) {
   const F = 93.2720950 + 483202.0175233 * T;           // 月の緯度の引数
 
   let lon = Lp
-    - 1.274 * sinD(Mp - 2 * D) + 0.658 * sinD(2 * D) - 0.186 * sinD(M)
+    + 6.289 * sinD(Mp) + 1.274 * sinD(2 * D - Mp) + 0.658 * sinD(2 * D)
+    + 0.214 * sinD(2 * Mp) - 0.186 * sinD(M) - 0.114 * sinD(2 * F)
     - 0.059 * sinD(2 * Mp - 2 * D) - 0.057 * sinD(Mp - 2 * D + M)
     + 0.053 * sinD(Mp + 2 * D) + 0.046 * sinD(2 * D - M)
     + 0.041 * sinD(Mp - M) - 0.035 * sinD(D) - 0.031 * sinD(Mp + M)
@@ -193,9 +194,10 @@ function moonAge(date) {
 
 /* ---------- 地球-月距離の遠近（近点 0% 〜 遠点 100%） ---------- */
 /* 観測値の代表値（月による平均的な近点・遠点） */
-const PERIGEE_KM = 363300, APOGEE_KM = 405500;
+const PERIGEE_KM = 356500, APOGEE_KM = 406700;
 function distanceRatioPct(dist) {
-  return Math.round((dist - PERIGEE_KM) / (APOGEE_KM - PERIGEE_KM) * 100);
+  const pct = Math.round((dist - PERIGEE_KM) / (APOGEE_KM - PERIGEE_KM) * 100);
+  return Math.max(0, Math.min(100, pct));
 }
 
 /* ---------- 表示用 ---------- */

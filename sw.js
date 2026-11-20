@@ -1,5 +1,5 @@
 /* Sky PWA service worker: ネットワーク優先・失敗時にキャッシュ (オフライン対応) */
-const CACHE = 'skypwa-v63';
+const CACHE = 'skypwa-v64';
 const ASSETS = [
   './',
   'index.html',
@@ -21,7 +21,15 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    const results = await Promise.allSettled(ASSETS.map(url => cache.add(url)));
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') console.warn('precache failed:', ASSETS[i], r.reason);
+    });
+    if (results.every(r => r.status === 'rejected')) throw new Error('precache: all failed');
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', e => {

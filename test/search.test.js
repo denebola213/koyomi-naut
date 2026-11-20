@@ -78,3 +78,54 @@ test('searchPlaces: 結果は最大30件', () => {
   assert.ok(r.length <= 30);
   assert.ok(r.length > 0);
 });
+
+function loadOazaReady() {
+  const appSrc = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const ensureFn = extractFunction(appSrc, 'ensureOaza');
+  const readyFn = extractFunction(appSrc, 'onOazaReady');
+  const appended = [];
+  const documentStub = {
+    createElement: () => ({}),
+    head: { appendChild: el => appended.push(el) },
+  };
+  const sandbox = { console, document: documentStub };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(`
+    let oazaState = 'idle';
+    let oazaWaiters = [];
+    ${ensureFn}
+    ${readyFn}
+    globalThis.__waiters = () => oazaWaiters;
+    globalThis.__state = () => oazaState;
+    globalThis.onOazaReady = onOazaReady;
+  `, sandbox, { filename: 'app.js' });
+  return { sandbox, appended };
+}
+
+test('onOazaReady: 同じコールバックは1回だけ積まれる (#24)', () => {
+  const { sandbox, appended } = loadOazaReady();
+  let calls = 0;
+  const cb = () => { calls++; };
+  sandbox.onOazaReady(cb);
+  sandbox.onOazaReady(cb);
+  sandbox.onOazaReady(cb);
+  assert.equal(sandbox.__waiters().length, 1, '重複登録されている');
+  assert.equal(appended.length, 1, 'script は1回だけ追加される');
+  // 読込完了をシミュレートすると1回だけ呼ばれる
+  appended[0].onload();
+  assert.equal(calls, 1);
+  assert.equal(sandbox.__state(), 'ready');
+});
+
+test('runSearch: 未読込時は「読込中…」を出して return する (#24)', () => {
+  const appSrc = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  const start = appSrc.indexOf('function runSearch()');
+  assert.ok(start >= 0, 'runSearch が見つからない');
+  const segment = appSrc.slice(start, start + 800);
+  const loadingIdx = segment.indexOf('読込中');
+  const returnIdx = segment.indexOf('return;', loadingIdx);
+  const searchIdx = segment.indexOf('searchPlaces(q)');
+  assert.ok(loadingIdx >= 0 && returnIdx > loadingIdx, '読込中表示の後に return が無い');
+  assert.ok(searchIdx > returnIdx, 'return より後に searchPlaces が残っている（unreachable）');
+});
