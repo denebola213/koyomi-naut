@@ -145,6 +145,11 @@ function fmtSkyWhen(w) {
   const wd = ['日', '月', '火', '水', '木', '金', '土'][w.getDay()];
   return `${w.getFullYear()}-${String(w.getMonth() + 1).padStart(2, '0')}-${String(w.getDate()).padStart(2, '0')} ${String(w.getHours()).padStart(2, '0')}:${String(w.getMinutes()).padStart(2, '0')}（${wd}）`;
 }
+/* 日付キー（YYYY-MM-DD）。翌日判定を日の数値比較でなく文字列比較で行い、月跨ぎ・年跨ぎでも意図が自明になるようにする */
+function dayKeyOf(d) {
+  const p2 = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+}
 function updateTimeLabels() {
   const label = fmtSkyWhen(skyWhen());
   setText('skyTimeLabel', label);
@@ -173,8 +178,7 @@ function render() {
   const fmtDur = min => min == null ? '—' : `${Math.floor(min / 60)}時間${Math.round(min % 60)}分`;
   const fmtAstro = t => {
     if (!t) return '—';
-    const suffix = t.getDate() !== Number(date.split('-')[2]) ? ' 翌' : '';
-    return fmtTime(t) + suffix;
+    return fmtTime(t) + (dayKeyOf(t) !== date ? ' 翌' : '');
   };
   setText('evDayLength', fmtDur(ev.dayLengthMin));
   setText('evSunMax', ev.sunMaxAlt.toFixed(1) + '°');

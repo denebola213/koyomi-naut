@@ -215,7 +215,6 @@ function toDMS(value, posLabel, negLabel) {
 function fmtTime(date) {
   if (!date) return '—';
   const p2 = n => String(n).padStart(2, '0');
-  const next = date.getDate() !== new Date().getDate() && date.getHours() < 12 ? '' : '';
   return `${p2(date.getHours())}:${p2(date.getMinutes())}`;
 }
 /* 四大相（新月・上弦・満月・下弦）判定: 黄経差（月−太陽）での交差時刻 */
