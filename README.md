@@ -2,6 +2,7 @@
 
 GPS または市町村・座標入力から、日の出・日の入り、月の出・月の入り、天文薄明、
 南中、太陽と月の軌道を表示する、オフライン対応の静的 PWA。
+初回に全データを取得するため、2回目以降は完全オフラインで動作する。
 
 - 本番: https://koyomi-naut.st-albireo.net/
 - リポジトリ: https://github.com/denebola213/koyomi-naut
