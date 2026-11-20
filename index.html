@@ -22,7 +22,7 @@
 </header>
 
 <main>
-  <p class="offline-note">計算は端末内で完結し、第三者への通信・データ送信はありません</p>
+  <p class="offline-note">オフライン対応 PWAです。一度開けば通信なしで使えます。計算は端末内で完結し、第三者への通信・データ送信はありません <button type="button" class="help-btn" id="installHelpBtn" aria-haspopup="dialog" aria-label="インストール方法の説明">?</button></p>
 
   <!-- 入力ゾーン: 場所・日付の指定だけ。結果は持たない -->
   <section class="zone zone-input" aria-labelledby="h-input">
@@ -180,6 +180,16 @@
   <p>時刻スライダーは指定日18時を中心に前後18時間（前日00:00〜翌日12:00、5分刻み）を動かせます。起動時は現在時刻が初期値となり、「現在」ボタンでいつでも現在時刻（日付は今日）に戻れます。太陽・月は点とラベル、惑星（水星〜土星）も点とラベルで示します。地平線下の天体は下部にまとめて表示します。</p>
   <p>一等星は視等級1.5以下の22星で、惑星より小さい点です。表示時は名前も一緒に出ます。星座は88星座の結び（線のみ）で、星座名はその中心付近に表示します。黄道は線、天の川は外側輪郭で塗ります。</p>
   <p>表示の切替はすべて「表示」行で行い、選択は保存されます。計算は端末内で完結し、通信しません。</p>
+  <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
+</dialog>
+
+<dialog id="installHelpDialog" class="help-dialog" aria-labelledby="installHelpTitle">
+  <h2 id="installHelpTitle">インストール方法について</h2>
+  <p>ブラウザのメニューから「アプリをインストール」または「ホーム画面に追加」を選ぶと、アプリとして使えます。インストール後はアドレスバーなしの専用画面で動作します。</p>
+  <p>Chrome・Edge（Android・パソコン）: メニュー（⋮）→「アプリをインストール」</p>
+  <p>Safari（iPhone・iPad）: 共有ボタン →「ホーム画面に追加」</p>
+  <p>Firefox（Android）: メニュー（⋮）→「インストール」または「ホーム画面に追加」</p>
+  <p>表示される項目はブラウザ・OSのバージョンで異なります。初回はオンラインで開いてキャッシュが揃った後は、通信なし（オフライン）でも使えます。</p>
   <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
 </dialog>
 
