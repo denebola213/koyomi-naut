@@ -10,7 +10,7 @@ const {
   julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz,
   dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime,
   moonPhaseName, quarterCrossing, phaseAngle, distanceRatioPct,
-  PERIGEE_KM, APOGEE_KM,
+  PERIGEE_KM, APOGEE_KM, horizonDipDeg,
 } = require('../astro.js');
 
 // 東京都千代田区 (app.js の既定地点)
@@ -85,6 +85,39 @@ test('dayEvents: 夏至・冬至は昼の長さが最大・最小', () => {
   assert.ok(summer.sunMaxAlt > winter.sunMaxAlt);
   assert.ok(Math.abs(summer.dayLengthMin - 875) < 10);
   assert.ok(Math.abs(winter.dayLengthMin - 585) < 10);
+});
+
+test('horizonDipDeg: 標高による地平線の俯角', () => {
+  assert.equal(horizonDipDeg(0), 0);
+  assert.equal(horizonDipDeg(undefined), 0);
+  assert.equal(horizonDipDeg(-100), 0);
+  // 1.76·√h 分（度）: 1000 m ≈ 0.928°、3000 m ≈ 1.607°
+  assert.ok(Math.abs(horizonDipDeg(1000) - 0.9276) < 0.001, `1000m=${horizonDipDeg(1000)}`);
+  assert.ok(Math.abs(horizonDipDeg(3000) - 1.6067) < 0.001, `3000m=${horizonDipDeg(3000)}`);
+  assert.ok(horizonDipDeg(4000) > horizonDipDeg(1000));
+});
+
+test('dayEvents: 標高を上げると日の出が早まり日の入りが遅れる', () => {
+  const sea = dayEvents(LAT, LON, '2026-03-20', 0);
+  const high = dayEvents(LAT, LON, '2026-03-20', 3000);
+  const riseShift = (sea.sunrise - high.sunrise) / 60000;
+  const setShift = (high.sunset - sea.sunset) / 60000;
+  assert.ok(riseShift > 5 && riseShift < 11, `日の出の前倒し=${riseShift.toFixed(2)}分`);
+  assert.ok(setShift > 5 && setShift < 11, `日の入りの後ろ倒し=${setShift.toFixed(2)}分`);
+  assert.ok(high.dayLengthMin > sea.dayLengthMin);
+  // 太陽の南中高度は幾何学的な値なので標高では変わらない
+  assert.ok(Math.abs(high.sunMaxAlt - sea.sunMaxAlt) < 0.01);
+});
+
+test('dayEvents: 標高 0 / 未指定は従来と同じ結果、薄明は標高で変わらない', () => {
+  const base = dayEvents(LAT, LON, '2026-03-20');
+  const zero = dayEvents(LAT, LON, '2026-03-20', 0);
+  const high = dayEvents(LAT, LON, '2026-03-20', 3000);
+  assert.equal(+base.sunrise, +zero.sunrise);
+  assert.equal(+base.sunset, +zero.sunset);
+  assert.equal(+base.astroStart, +high.astroStart);
+  assert.equal(+base.astroEnd, +high.astroEnd);
+  assert.equal(base.nightLengthMin, high.nightLengthMin);
 });
 
 test('dayEvents: 天文薄明は日の出・日の入りの外側にある', () => {

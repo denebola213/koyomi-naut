@@ -36,7 +36,7 @@ def zone(name):
     return rest[:cut]
 
 inp, res = zone('zone-input'), zone('zone-result')
-result_ids = ['placeLabel', 'dmsLat', 'dmsLon', 'decLat', 'decLon', 'dateLabel', 'skyTimeLabel', 'timeline', 'skyChart']
+result_ids = ['placeLabel', 'dmsLat', 'dmsLon', 'decLat', 'decLon', 'elevLabel', 'dateLabel', 'skyTimeLabel', 'timeline', 'skyChart']
 leaked = [i for i in result_ids if f'id="{i}"' in inp]
 if leaked:
     problems.append(f'入力ゾーンに結果idが漏れている: {leaked}')
