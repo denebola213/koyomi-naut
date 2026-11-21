@@ -52,16 +52,15 @@
       <div class="row">
         <button id="gpsBtn" type="button">GPS で取得</button>
       </div>
+      <p class="note">高度は端末と測位状況によっては取得できません（その場合は標高なしの計算になります）。</p>
     </div>
 
     <div role="tabpanel" id="panel-coords" aria-labelledby="tab-coords" class="place-panel" hidden>
       <div class="row coords">
         <label>緯度 <input id="latInput" inputmode="decimal" aria-label="緯度"></label>
         <label>経度 <input id="lonInput" inputmode="decimal" aria-label="経度"></label>
-        <label>標高 <input id="elevInput" inputmode="numeric" aria-label="標高（メートル）"></label>
         <button id="applyCoords" type="button">座標を適用</button>
       </div>
-      <p class="note">標高は地平線の沈み込み（俯角）として日の出・日の入り・月の出・月の入りに反映します。天文薄明（太陽高度 −18°）は天球上の定義のため標高では変わりません。</p>
     </div>
 
   </section>
@@ -95,7 +94,7 @@
         <div><dt>場所</dt><dd><strong id="placeLabel">—</strong></dd></div>
         <div><dt>緯度</dt><dd><span id="dmsLat">—</span> <span id="decLat" class="dim"></span></dd></div>
         <div><dt>経度</dt><dd><span id="dmsLon">—</span> <span id="decLon" class="dim"></span></dd></div>
-        <div><dt>標高</dt><dd><span id="elevLabel">—</span></dd></div>
+        <div id="elevRow" hidden><dt>標高</dt><dd><span id="elevLabel">—</span></dd></div>
         <div><dt>日付</dt><dd><span id="dateLabel">—</span></dd></div>
       </dl>
     </div>
@@ -173,6 +172,7 @@
 <dialog id="twilightHelpDialog" class="help-dialog" aria-labelledby="twilightHelpTitle">
   <h2 id="twilightHelpTitle">天文薄明について</h2>
   <p>天文薄明は太陽高度 −18° の潜没（開始）・出現（終了）時刻。「翌」は翌日を指す。</p>
+  <p>標高は GPS で高度が取得できたときだけ表示し、地平線の沈み込み（俯角）として日の出・日の入り・月の出・月の入りに反映します。天文薄明は天球上の太陽高度の定義なので、標高では変わりません。</p>
   <form method="dialog"><button type="submit" class="help-close">閉じる</button></form>
 </dialog>
 

@@ -99,6 +99,8 @@ label { display: inline-flex; gap: 6px; align-items: center; }
 .confirmed-list { margin: 0; border: 1px solid var(--line); background: var(--paper);
   display: flex; flex-wrap: wrap; gap: 5px 20px; padding: 7px 12px; }
 .confirmed-list > div { display: inline-flex; gap: 6px; align-items: baseline; }
+/* 上の inline-flex は [hidden] の UA 既定（display:none）に勝つので明示的に打ち消す */
+.confirmed-list > div[hidden] { display: none; }
 .confirmed-list dt { color: var(--dim); flex: 0 0 auto; }
 .confirmed-list dd { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
 .dim { color: var(--dim); font-size: 13px; }

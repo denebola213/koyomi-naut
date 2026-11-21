@@ -54,7 +54,7 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
 | 月距離 | `moonEcliptic().dist` | アラビア数字 + `km` のみ（千・万表記なし） |
 | 四大相（新月・上弦・満月・下弦） | `moonPhaseName(date)`（黄経差で交差時刻を探索） | 交差時刻 ±0.5 日の日に月齢横に括弧書き。それ以外は非表示 |
 | 距離の遠近 | `distanceRatioPct(m.dist)` | 近点 356,500 km=0%、遠点 406,700 km=100% で正規化表示。`?` ボタンで説明ポップアップ |
-| 標高 | `state.elev` → `dayEvents(lat, lon, date, elev)` | 整数 + ` m`（3桁区切り）。0 m で従来と同じ結果 |
+| 標高 | `state.elev` / `state.elevKnown` → `dayEvents(lat, lon, date, elev)` | 整数 + ` m`（3桁区切り）。GPS の高度が取れたときだけ確定条件に出し、不明なら行ごと隠す |
 
 - 結果ゾーンはタブで「出没・薄明」（既定）と「星空のようす」（全天図）に分ける。
   表示名を変えるときは表示テキスト・`aria-label`・`README.md` を揃え、
@@ -64,8 +64,9 @@ Don't use for: デプロイ手順そのもの（`DEPLOY.md` / `terraform/pages.t
   日の出・日の入り・月の出・月の入りの閾値から引く（`-0.833 - dip` / `0.125 - dip`）。
   太陽・月の高度そのもの（`altAz()`・南中高度・軌道図・全天図）は幾何学的な値なので標高では変えない。
   天文薄明（−18°）は天球上の太陽高度の定義なので俯角を適用しない。
-  標高は座標と独立に変更でき（`elevInput` の `change`）、地名選択では書き換えない
-  （同梱データに標高が無いため）。GPS は `coords.altitude` があれば取り込む。
+  標高の取得元は **GPS のみ**（`coords.altitude`）。手入力欄は持たない（GPS 由来の値を
+  入力欄に流用すると「入力欄を結果表示に使う」ことになりゾーン分離に反する）。
+  地名選択・座標の手入力では標高は不明なので 0 に戻す（`state.elevKnown = false`）。
 - 確定条件の項目は 場所・緯度・経度・標高・日付（時刻は含めない）。
 - 時間窓は指定日 00:00 〜 翌日日の出（`dayEvents()` の `windowEvents`）。
 - 新時刻を追加する場合は `{ time, label, cls }` を `windowEvents` に追加し時刻順ソート

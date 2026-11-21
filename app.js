@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
-const state = { lat: 35.6812, lon: 139.7671, elev: 0, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true, showStars: true, showEcliptic: true, showMilkyWay: true, showConstellationNames: false };
+const state = { lat: 35.6812, lon: 139.7671, elev: 0, elevKnown: false, place: '東京都 千代田区（既定）', date: '', skyOffsetMin: 180, view: 'events', showPlanets: true, showConstellations: true, showStars: true, showEcliptic: true, showMilkyWay: true, showConstellationNames: false };
 const isRedTheme = () => document.documentElement.dataset.theme === 'red';
 const isDarkPair = () => isRedTheme() || matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -33,25 +33,30 @@ const clampElev = v => {
   if (!isFinite(n)) return 0;
   return Math.round(Math.max(0, Math.min(8850, n)));
 };
+/* 標高の取得元は GPS のみ。GPS の高度が取れたときだけ elev を渡す。
+ * 地名選択・座標の手入力では標高は不明なので 0（＝従来と同じ結果）に戻す。 */
 function setPlace(lat, lon, label, elev) {
+  const known = elev != null && isFinite(Number(elev));
   state.lat = lat; state.lon = lon; state.place = label;
-  if (elev != null && isFinite(Number(elev))) state.elev = clampElev(elev);
+  state.elev = known ? clampElev(elev) : 0;
+  state.elevKnown = known;
   $('latInput').value = lat.toFixed(4);
   $('lonInput').value = lon.toFixed(4);
-  $('elevInput').value = String(state.elev);
   $('placeLabel').textContent = label;
   save();
   render();
 }
 function save() {
-  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, elev: state.elev, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations, showStars: state.showStars, showEcliptic: state.showEcliptic, showMilkyWay: state.showMilkyWay, showConstellationNames: state.showConstellationNames })); } catch (e) {}
+  try { localStorage.setItem('skypwa-v1', JSON.stringify({ lat: state.lat, lon: state.lon, elev: state.elev, elevK: state.elevKnown, place: state.place, date: state.date, skyOffsetMin: state.skyOffsetMin, view: state.view, showPlanets: state.showPlanets, showConstellations: state.showConstellations, showStars: state.showStars, showEcliptic: state.showEcliptic, showMilkyWay: state.showMilkyWay, showConstellationNames: state.showConstellationNames })); } catch (e) {}
 }
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem('skypwa-v1') || 'null');
     if (s && typeof s.lat === 'number') {
       state.lat = s.lat; state.lon = s.lon; state.place = s.place || ''; state.date = s.date || '';
-      state.elev = typeof s.elev === 'number' && isFinite(s.elev) ? clampElev(s.elev) : 0; // 旧データ（elev なし）は 0
+      // 標高は GPS 由来のみ。旧データ（elev/elevK なし）は「不明」として扱う
+      state.elevKnown = s.elevK === true && typeof s.elev === 'number' && isFinite(s.elev);
+      state.elev = state.elevKnown ? clampElev(s.elev) : 0;
       if (typeof s.skyOffsetMin === 'number') state.skyOffsetMin = Math.max(-1080, Math.min(1080, s.skyOffsetMin));
       else if (typeof s.time === 'string' && /^\d{2}:\d{2}$/.test(s.time)) {
         // 旧形式（時刻文字列 21:00 等）からの移行: 指定日18時からのオフセットに変換
@@ -343,18 +348,21 @@ function paintTimeSlider() {
   el.style.setProperty('--range-fill', pct.toFixed(2) + '%');
 }
 function render() {
-  const { lat, lon, date, elev } = state;
+  const { lat, lon, date, elev, elevKnown } = state;
   $('dmsLat').textContent = toDMS(lat, 'N', 'S');
   $('dmsLon').textContent = toDMS(lon, 'E', 'W');
   $('decLat').textContent = `(${lat.toFixed(4)}°)`;
   $('decLon').textContent = `(${lon.toFixed(4)}°)`;
-  setText('elevLabel', `${Math.round(elev).toLocaleString('ja-JP')} m`);
+  // 標高は GPS で取れたときだけ確定条件に出す（不明なら行ごと隠す）
+  const elevRow = $('elevRow');
+  if (elevRow) elevRow.hidden = !elevKnown;
+  setText('elevLabel', elevKnown ? `${Math.round(elev).toLocaleString('ja-JP')} m` : '—');
   // 確定した日付（結果ゾーン）: YYYY-MM-DD（曜）
   const wd = ['日', '月', '火', '水', '木', '金', '土'][new Date(date + 'T12:00:00').getDay()];
   setText('dateLabel', `${date}（${wd}）`);
   updateTimeLabels();
 
-  const ev = dayEvents(lat, lon, date, elev);
+  const ev = dayEvents(lat, lon, date, elevKnown ? elev : 0);
   const fmtDur = min => min == null ? '—' : `${Math.floor(min / 60)}時間${Math.round(min % 60)}分`;
   const fmtAstro = t => {
     if (!t) return '—';
@@ -830,7 +838,6 @@ function init() {
   $('dateInput').value = state.date;
   $('latInput').value = state.lat.toFixed(4);
   $('lonInput').value = state.lon.toFixed(4);
-  $('elevInput').value = String(state.elev);
   $('placeLabel').textContent = state.place;
 
   /* 場所タブ切り替え */
@@ -922,16 +929,7 @@ function init() {
   $('applyCoords').addEventListener('click', () => {
     const lat = parseFloat($('latInput').value), lon = parseFloat($('lonInput').value);
     if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) { alert('緯度 -90〜90、経度 -180〜180 を入力してください'); return; }
-    const elevRaw = $('elevInput').value.trim();
-    if (elevRaw !== '' && !isFinite(Number(elevRaw))) { alert('標高は 0〜8850 のメートル数値で入力してください'); return; }
-    setPlace(lat, lon, '手入力の座標', elevRaw === '' ? 0 : Number(elevRaw));
-  });
-  // 標高は座標と独立に変えられる（座標を適用し直さなくても出没時刻に反映する）
-  $('elevInput').addEventListener('change', e => {
-    state.elev = clampElev(e.target.value);
-    e.target.value = String(state.elev);
-    save();
-    render();
+    setPlace(lat, lon, '手入力の座標');
   });
   $('dateInput').addEventListener('change', e => { state.date = e.target.value || todayStr(); syncMoonCalMonth(); save(); render(); });
   $('todayBtn').addEventListener('click', () => { state.date = todayStr(); $('dateInput').value = state.date; syncMoonCalMonth(); save(); render(); });
