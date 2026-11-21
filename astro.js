@@ -75,6 +75,14 @@ const sunAltAz = (date, lat, lon) => { const s = sunEcliptic(date); return altAz
 const moonAltAz = (date, lat, lon) => { const m = moonEcliptic(date); return altAz(m.ra, m.dec, date, lat, lon); };
 
 /* ---------- 出没・薄明 ---------- */
+/* 標高 h(m) による地平線の沈み込み（俯角）。標準大気の屈折を考慮した近似
+ * dip(′)=1.76·√h。h=0 で 0 になるので、標高未指定時は従来と同じ閾値になる。
+ * 天文薄明は天球上の太陽高度（−18°）の定義なので俯角は適用しない。 */
+function horizonDipDeg(elev) {
+  const h = Number.isFinite(elev) && elev > 0 ? elev : 0;
+  return h > 0 ? 1.76 * Math.sqrt(h) / 60 : 0;
+}
+
 function findCrossings(lat, lon, dayStart, hours, body, threshold) {
   // dayStart から hours 時間を 5 分刻みで走査し threshold 交差を二分探索
   const altAt = t => (body === 'sun' ? sunAltAz(new Date(t), lat, lon) : moonAltAz(new Date(t), lat, lon)).alt;
@@ -103,14 +111,16 @@ function findCrossings(lat, lon, dayStart, hours, body, threshold) {
  * タイムライン対象: 指定日 00:00 から翌日の日の出まで (windowEvents)
  * 暗夜の長さ: 指定日夕方の天文薄明開始 → 翌朝の天文薄明終了
  */
-function dayEvents(lat, lon, dateStr) {
+function dayEvents(lat, lon, dateStr, elev = 0) {
   const [y, mo, d] = dateStr.split('-').map(Number);
   const dayStart = new Date(y, mo - 1, d, 0, 0, 0);
   const nextDayStart = new Date(y, mo - 1, d + 1, 0, 0, 0);
+  // 標高による俯角: 地平線が下がるぶん出没は早まる（沈むのは遅くなる）
+  const dip = horizonDipDeg(elev);
   // 48時間走査して窓 (00:00〜翌日日の出) の全交差を集める
-  const sHits = findCrossings(lat, lon, dayStart, 48, 'sun', -0.833);
+  const sHits = findCrossings(lat, lon, dayStart, 48, 'sun', -0.833 - dip);
   const astroHits = findCrossings(lat, lon, dayStart, 48, 'sun', -18);
-  const moonHits = findCrossings(lat, lon, dayStart, 48, 'moon', 0.125);
+  const moonHits = findCrossings(lat, lon, dayStart, 48, 'moon', 0.125 - dip);
   const nextSunriseHit = sHits.find(h => h.rising && h.time >= nextDayStart) || null;
   const windowEnd = nextSunriseHit ? nextSunriseHit.time : new Date(dayStart.getTime() + 24 * 3600000);
   const inWindow = t => t >= dayStart && t <= windowEnd;
@@ -264,4 +274,4 @@ function moonPhaseName(date) {
   return '';
 }
 
-if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName, quarterCrossing, phaseAngle, distanceRatioPct, PERIGEE_KM, APOGEE_KM };
+if (typeof module !== 'undefined') module.exports = { julianDay, sunEcliptic, moonEcliptic, sunAltAz, moonAltAz, dayEvents, trajectory, moonAge, SYNODIC, toDMS, fmtTime, moonPhaseName, quarterCrossing, phaseAngle, distanceRatioPct, PERIGEE_KM, APOGEE_KM, horizonDipDeg };
